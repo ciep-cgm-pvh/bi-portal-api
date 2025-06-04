@@ -1,0 +1,28 @@
+name: CI - Frontend
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Clonar o repositório
+        uses: actions/checkout@v3
+
+      - name: 🧰 Instalar Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      - name: 📦 Instalar dependências
+        run: npm install
+
+      - name: 🔧 Build do projeto (simulado)
+        run: |
+          echo "Ainda não há código para buildar"
+          echo "Simulando sucesso"
