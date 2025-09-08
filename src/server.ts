@@ -1,7 +1,7 @@
 // src/server.ts
 import Fastify from 'fastify';
 import mercurius from 'mercurius';
-import prismaPlugin from './plugins/prisma';
+//import prismaPlugin from './plugins/prisma';
 import { buildSchema } from './schema/index';
 import cors from '@fastify/cors';
 
