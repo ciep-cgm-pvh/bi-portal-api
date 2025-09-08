@@ -9,8 +9,18 @@ export class AbastecimentoService {
   private processedData: AbastecimentoProcessed[];
 
   constructor() {
-    this.rawData = loadAbastecimento();
-    this.processedData = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(this.rawData));
+    try {
+      console.log('Loading abastecimento data...');
+      this.rawData = loadAbastecimento();
+      console.log(`Loaded ${this.rawData.length} raw abastecimento records`);
+
+      this.processedData = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(this.rawData));
+      console.log(`Processed ${this.processedData.length} abastecimento records`);
+    } catch (error) {
+      console.error('Error in AbastecimentoService constructor:', error);
+      this.rawData = [];
+      this.processedData = [];
+    }
   }
 
   public getAbastecimentos(filters?: AbastecimentoFilters): AbastecimentoProcessed[] {

@@ -9,8 +9,18 @@ export class ManutencaoService {
   private processedData: ManutencaoProcessed[];
 
   constructor() {
-    this.rawData = loadManutencao();
-    this.processedData = mapToProcessed(ManutencaoProcessor.processManutencaoData(this.rawData));
+    try {
+      console.log('Loading manutencao data...');
+      this.rawData = loadManutencao();
+      console.log(`Loaded ${this.rawData.length} raw manutencao records`);
+
+      this.processedData = mapToProcessed(ManutencaoProcessor.processManutencaoData(this.rawData));
+      console.log(`Processed ${this.processedData.length} manutencao records`);
+    } catch (error) {
+      console.error('Error in ManutencaoService constructor:', error);
+      this.rawData = [];
+      this.processedData = [];
+    }
   }
 
   public getManutencao(filters?: ManutencaoFilters): ManutencaoProcessed[] {
@@ -52,7 +62,7 @@ export class ManutencaoService {
     return filtered;
   }
   public getManutencaoVehicleSummary() {
-    
+
   }
 
   public getTableCount(filters?: ManutencaoFilters, tableFilters?: ManutencaoTableFilters) {
