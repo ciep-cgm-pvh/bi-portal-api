@@ -1,0 +1,188 @@
+scalar DateTime
+
+input DateRangeInput {
+  from: DateTime!
+  to: DateTime!
+}
+
+input AbastecimentoFiltersInput {
+  dateRange: DateRangeInput
+  fuelType: String
+  vehiclePlate: String
+  vehicleBrand: String
+  driverName: String
+  department: String # ou String, se quiser só um valor
+  vehicleModel: String
+  gasStationCity: String
+  gasStationName: String
+}
+
+input AbastecimentoFiltersOptionsInput {
+  fuelType: String
+  vehiclePlate: String
+  department: String # ou String, se quiser só um valor
+  vehicleModel: String
+  gasStationCity: String
+  gasStationName: String
+}
+
+input AbastecimentoTableFiltersInput {
+  datetime: String
+  cost: String
+  fuelVolume: String
+  fuelType: [String]
+  driverName: String
+  vehiclePlate: String
+  vehicleModel: String
+  vehicleBrand: String
+  gasStationName: [String]
+  gasStationCity: [String]
+  department: [String] # ou String, se quiser só um valor
+}
+
+type Vehicle {
+  plate: String
+  model: String
+  brand: String
+}
+
+type GasStation {
+  name: String
+  city: String
+}
+
+type Abastecimento {
+  id: ID!
+  datetime: DateTime
+  cost: Float
+  fuelVolume: Float
+  fuelType: String
+  driverName: String
+  vehicle: Vehicle
+  gasStation: GasStation
+  department: String
+  costCenter: String
+}
+
+type AbastecimentoColumn {
+  headerLabel: String!
+  accessor: String!
+  isSortable: Boolean!
+  dataType: String!
+  isFilterable: Boolean!
+  filterKey: String
+}
+
+type AbastecimentoKpis {
+  totalCost: Float!
+  fuelConsumed: Float!
+  kilometersDriven: Float!
+  vehiclesCount: Int!
+  dailyAverageCost: Float!
+  suppliesCount: Int!
+  lastUpdate: DateTime!
+}
+
+type vehicleSummary {
+  vehicle: Vehicle
+  department: String
+  totalCost: Float
+  supplyCount: Int
+}
+
+type FilterOption {
+  value: String
+  label: String
+}
+
+type CostByVehicle {
+  vehicle: String!
+  total: Float!
+}
+
+type CostByDepartment {
+  department: String!
+  total: Float!
+}
+
+type CostByCity {
+  city: String!
+  total: Float!
+}
+
+type CostByGasStation {
+  name: String!
+  total: Float!
+}
+
+type CostByPlate {
+  plate: String!
+  total: Float!
+}
+
+type CostByDate {
+  date: String! # yyyy-mm-dd
+  total: Float!
+}
+
+type CostOverTime {
+  date: String! # yyyy-mm-dd
+  total: Float!
+}
+
+type RankingByDate {
+  date: String! # yyyy-mm-dd
+  total: Float!
+}
+
+type RankingByPlate {
+  plate: String!
+  total: Float!
+  quantity: Int!
+}
+
+type RankingByDepartment {
+  department: String!
+  total: Float!
+}
+
+type Query {
+  getAbastecimentos(filters: AbastecimentoFiltersInput): [Abastecimento!]!
+  getAbastecimentosTable(
+    limit: Int
+    offset: Int
+    sortBy: String
+    sortDirection: String
+    filters: AbastecimentoFiltersInput 
+    tableFilters: AbastecimentoTableFiltersInput
+  ): [Abastecimento!]!
+
+  abastecimentosCount(
+    filters: AbastecimentoFiltersInput
+    tableFilters: AbastecimentoTableFiltersInput
+    ): Int!
+  abastecimentoKpis(filters: AbastecimentoFiltersInput): AbastecimentoKpis!
+  vehicleSummary: [vehicleSummary]
+
+  departmentOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
+  vehiclePlateOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
+  vehicleModelOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
+  gasStationCityOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
+  gasStationNameOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
+
+  costByVehicle(filters: AbastecimentoFiltersInput): [CostByVehicle!]!
+  costByDepartment(filters: AbastecimentoFiltersInput): [CostByDepartment!]!
+  costByCity(filters: AbastecimentoFiltersInput): [CostByCity!]!
+  costByGasStation(filters: AbastecimentoFiltersInput): [CostByGasStation!]!
+  costByPlate(filters: AbastecimentoFiltersInput): [CostByPlate!]!
+  costByDate(filters: AbastecimentoFiltersInput): [CostByDate!]!
+  costOverTime(filters: AbastecimentoFiltersInput): [CostOverTime!]!
+
+  rankingByDate(filters: AbastecimentoFiltersInput): [RankingByDate!]!
+  rankingByPlate(filters: AbastecimentoFiltersInput): [RankingByPlate!]!
+  rankingByDepartment(
+    filters: AbastecimentoFiltersInput
+  ): [RankingByDepartment!]!
+
+  abastecimentosColumns: [AbastecimentoColumn!]!
+}

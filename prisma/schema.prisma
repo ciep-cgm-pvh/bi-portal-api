@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id    Int    @id @default(autoincrement())
+  name  String
+  email String @unique
+}
+
+model cliente {
+  id            Int             @id @default(autoincrement())
+  nome          String
+  unidade       String
+  subunidade    String?
+  ordem_servico ordem_servico[]
+}
+
+model fornecedor {
+  id            Int             @id @default(autoincrement())
+  nome          String
+  cidade        String?
+  uf            String?         @db.Char(2)
+  cnpj          String?         @db.VarChar(18)
+  ordem_servico ordem_servico[]
+}
+
+model ordem_servico {
+  id                                                  Int         @id @default(autoincrement())
+  os_codigo                                           String      @db.VarChar(50)
+  data                                                DateTime    @db.Timestamp(6)
+  tipo_os                                             String?
+  categoria_os                                        String?
+  total_mdo                                           Decimal?    @db.Decimal
+  taxa_desc_mdo                                       Decimal?    @db.Decimal
+  mdo_com_desc                                        Decimal?    @db.Decimal
+  total_pecas                                         Decimal?    @db.Decimal
+  taxa_desc_pecas                                     Decimal?    @db.Decimal
+  pecas_com_desc                                      Decimal?    @db.Decimal
+  total                                               Decimal?    @db.Decimal
+  total_sem_desc                                      Decimal?    @db.Decimal
+  nf_pecas                                            String?
+  nf_mdo                                              String?
+  nf_conjugada                                        String?
+  declaracao                                          Boolean?
+  correcao                                            Boolean?
+  periodo                                             String?
+  arquivo                                             String?
+  secretaria                                          String?
+  veiculo_id                                          Int?
+  fornecedor_id                                       Int?
+  aprovador_id                                        Int?
+  condutor_entregou_id                                Int?
+  condutor_retirou_id                                 Int?
+  responsavel_tecnico_id                              Int?
+  cliente_id                                          Int?
+  pessoa_ordem_servico_aprovador_idTopessoa           pessoa?     @relation("ordem_servico_aprovador_idTopessoa", fields: [aprovador_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cliente                                             cliente?    @relation(fields: [cliente_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pessoa_ordem_servico_condutor_entregou_idTopessoa   pessoa?     @relation("ordem_servico_condutor_entregou_idTopessoa", fields: [condutor_entregou_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pessoa_ordem_servico_condutor_retirou_idTopessoa    pessoa?     @relation("ordem_servico_condutor_retirou_idTopessoa", fields: [condutor_retirou_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  fornecedor                                          fornecedor? @relation(fields: [fornecedor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pessoa_ordem_servico_responsavel_tecnico_idTopessoa pessoa?     @relation("ordem_servico_responsavel_tecnico_idTopessoa", fields: [responsavel_tecnico_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  veiculo                                             veiculo?    @relation(fields: [veiculo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model pessoa {
+  id                                                         Int             @id @default(autoincrement())
+  nome                                                       String
+  cpf                                                        String?         @db.VarChar(14)
+  tipo                                                       pessoa_tipo
+  ordem_servico_ordem_servico_aprovador_idTopessoa           ordem_servico[] @relation("ordem_servico_aprovador_idTopessoa")
+  ordem_servico_ordem_servico_condutor_entregou_idTopessoa   ordem_servico[] @relation("ordem_servico_condutor_entregou_idTopessoa")
+  ordem_servico_ordem_servico_condutor_retirou_idTopessoa    ordem_servico[] @relation("ordem_servico_condutor_retirou_idTopessoa")
+  ordem_servico_ordem_servico_responsavel_tecnico_idTopessoa ordem_servico[] @relation("ordem_servico_responsavel_tecnico_idTopessoa")
+}
+
+model veiculo {
+  id            Int             @id @default(autoincrement())
+  placa         String          @db.VarChar(10)
+  numero_cartao String?         @db.VarChar(32)
+  prefixo       String?
+  tipo_frota    String?
+  marca         String?
+  modelo        String?
+  ano           String?         @db.VarChar(9)
+  patrimonio    String?
+  km_horimetro  Decimal?        @db.Decimal
+  ordem_servico ordem_servico[]
+}
+
+enum pessoa_tipo {
+  CONDUTOR
+  APROVADOR
+  TECNICO
+}

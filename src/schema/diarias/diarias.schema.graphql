@@ -1,0 +1,50 @@
+# Define o tipo para os filtros que podemos receber
+input DiariaFilters {
+  startDate: String
+  endDate: String
+  organ: [String!]
+  situation: [String!]
+}
+
+# Dados para os KPIs
+type KpiData {
+  totalGasto: String!
+  totalDiarias: Int!
+}
+
+# Dados para o gráfico de Top Orgaos
+type OrgaoGastoDiaria {
+  name: String!
+  total: Float!
+}
+
+# Dados para o gráfico de Gasto Mensal
+type GastoMesDiaria {
+  month: String!
+  total: Float!
+}
+
+# O tipo Diaria para a tabela
+type Diaria {
+  OrgaoUnificado: String
+  ValorConcedido: Float
+  Situacao: String
+  Funcionario: String
+  DataPagamento: String
+  NProcesso: String
+  parsedDate: String
+}
+
+type FilterOptionsDiaria {
+  organ: [String!]
+  situation: [String!]
+}
+
+# A Query principal
+type Query {
+  diarias(filters: DiariaFilters): [Diaria!]
+  kpis(filters: DiariaFilters): KpiData!
+  topOrgaos(filters: DiariaFilters): [OrgaoGastoDiaria!]
+  gastoMensal(filters: DiariaFilters): [GastoMesDiaria!]
+  filterOptions: FilterOptionsDiaria!
+}

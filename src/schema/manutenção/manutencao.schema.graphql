@@ -1,0 +1,155 @@
+scalar DateTime
+
+input DateRangeInput {
+  from: DateTime!
+  to: DateTime!
+}
+
+input ManutencaoFiltersInput {
+  dateRange: DateRangeInput
+  department: String
+  plate: String
+  categoryOs: String
+}
+
+input ManutencaoFilterTableInput {
+  datetime: String
+  os: String
+  department: String
+  plate: String
+  categoryOs: String
+  totalCost: String
+}
+
+type Manutencao {
+  id: ID!
+  os: String
+  datetime: String
+  plate: String
+  numCard: String
+  prefixo: String
+  typeFrota: String
+  brand: String
+  model: String
+  year: String
+  patrimony: String
+  kmHorimetro: Float
+  estabelecimento: String
+  city: String
+  uf: String
+  cnpj: String
+  department: String
+  typeOs: String
+  categoryOs: String
+  nomeAprovador: String
+  cpfAprovador: String
+  nfPecas: String
+  nfMdo: String
+  nfConjugada: String
+  declaracao: String
+  correcao: String
+  condutorEntregou: String
+  condutorRetirou: String
+  responsavelTecnico: String
+  totalMdo: Float
+  discountTaxaMdo: Float
+  mdoDiscount: Float
+  totalPecas: Float
+  discountTaxaPecas: Float
+  pecasWithDiscount: Float
+  totalWithoutDiscount: Float
+  totalCost: Float
+  client: String
+  secretaria: String
+  period: String
+  archive: String
+}
+
+type ManutencaoTable {
+  id: ID!
+  os: String!
+  datetime: String
+  plate: String
+  department: String
+  categoryOs: String
+  totalCost: Float
+}
+
+type ManutencaoVehicleSummary {
+  plate: String
+  model: String
+  brand: String
+  department: String
+  totalCost: String
+  os: String
+}
+
+type ManutencaoColumn {
+  headerLabel: String!
+  accessor: String!
+  isSortable: Boolean!
+  dataType: String!
+}
+
+type CostByDepartment {
+  department: String!
+  total: Float!
+}
+
+type CostByTypeOfManutencao{
+  categoryOs: String!
+  total: Float!
+}
+
+type ManutencaoCharts {
+  costByDepartment: [CostByDepartment!]!
+  costByTypeOfManutencao: [CostByTypeOfManutencao!]!
+}
+
+type ManutencaoKpis {
+  totalCost: Float!
+  serviceOrderCount: Int!
+  averageCostPerOs: Float!
+  lastUpdate: String
+}
+
+type FilterType {
+  value: String
+  label: String
+}
+
+type FilterOptions {
+  department: [FilterType!]!
+  categoryOs: [FilterType!]!
+  plate: [FilterType!]!
+}
+
+type Query {
+  getManutencao(
+    filters: ManutencaoFiltersInput
+  ): [Manutencao!]!
+  
+  getManutencaoTable(
+    limit: Int
+    offset: Int
+    sortBy: String
+    sortDirection: String
+    filters: ManutencaoFiltersInput
+    tableFilters: ManutencaoFilterTableInput
+  ): [ManutencaoTable!]!
+  
+  ManutencaoColumns: [ManutencaoColumn!]!
+
+  getManutencaoVehicleSummary: [ManutencaoVehicleSummary!]!
+
+  TableCount(
+    filters: ManutencaoFiltersInput
+    tableFilters: ManutencaoFilterTableInput
+  ): Int!
+
+  ManutencaoKpis(filters: ManutencaoFiltersInput): ManutencaoKpis!
+
+  ManutencaoCharts(filters: ManutencaoFiltersInput): ManutencaoCharts!
+
+  FilterOptions(filters: ManutencaoFiltersInput): FilterOptions!
+}
