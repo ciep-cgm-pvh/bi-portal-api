@@ -1,15 +1,30 @@
+scalar DateTime
+
+input DateRangeInput {
+  from: DateTime!
+  to: DateTime!
+}
+
 # Define o tipo para os filtros que podemos receber
-input DiariaFilters {
-  startDate: String
-  endDate: String
-  organ: [String!]
-  situation: [String!]
+input DiariasFilters {
+  dateRange: DateRangeInput
+  department: [String!]
+  status: String!
+  process: String
+  paymentDate: String
+}
+
+input DiariasTableFilters {
+  datetime: String
+  department: String
+  employee: String
+  status: String
 }
 
 # Dados para os KPIs
 type KpiData {
-  totalGasto: String!
-  totalDiarias: Int!
+  totalGasto: Float
+  totalDiarias: Int
 }
 
 # Dados para o gráfico de Top Orgaos
@@ -24,27 +39,76 @@ type GastoMesDiaria {
   total: Float!
 }
 
+type DiariasCharts {
+  GastoMesDiaria: [GastoMesDiaria]!
+  OrgaoGastoDiaria: [OrgaoGastoDiaria]!
+}
+
+type Diarias {
+  department: String
+  budgetUnit: String
+  action: String
+  expensePlan: String
+  resourceSource: String
+  expenseType: String
+  payment: String
+  paymentDate: String
+  settlement: String
+  commitment: String
+  employee: String
+  history: String
+  processNumber: String
+  defaultDate: String
+  delayDays: String
+  approvedDate: String
+  canceledDate: String
+  amountToApprove: Float
+  amountApproved: Float
+  amountCanceled: Float
+  amountGranted: Float
+  balance: Float
+}
 # O tipo Diaria para a tabela
-type Diaria {
-  OrgaoUnificado: String
-  ValorConcedido: Float
-  Situacao: String
-  Funcionario: String
-  DataPagamento: String
-  NProcesso: String
-  parsedDate: String
+type DiariaTable {
+  department: String
+  amountGranted: Float
+  status: String
+  employee: String
+  paymentDate: String
+  processNumber: String
+}
+
+type FilterOption {
+  value: String
+  label: String
 }
 
 type FilterOptionsDiaria {
-  organ: [String!]
-  situation: [String!]
+  department: [FilterOption!]
+  status: [FilterOption!]
+  processNumber: [FilterOption!]
+  paymentDate: [FilterOption!]
 }
 
 # A Query principal
 type Query {
-  diarias(filters: DiariaFilters): [Diaria!]
-  kpis(filters: DiariaFilters): KpiData!
-  topOrgaos(filters: DiariaFilters): [OrgaoGastoDiaria!]
-  gastoMensal(filters: DiariaFilters): [GastoMesDiaria!]
-  filterOptions: FilterOptionsDiaria!
+  getDiarias(filters: DiariasFilters): [Diarias]
+  getDiariasTable(
+    limit: Int
+    offset: Int
+    sortBy: String
+    sortDirection: String
+    filters: DiariasFilters
+    tableFilters: DiariasTableFilters
+  ): [DiariaTable!]
+
+  getDiariasTableCount(
+    filters: DiariasFilters
+    tableFilters: DiariasTableFilters
+  ): Int!
+
+  getDiariasLastUpdate: String!
+  getDiariasKpi(filters: DiariasFilters): KpiData!
+  getDiariasCharts(filters: DiariasFilters): DiariasCharts!
+  getDiariasFiltersOptions(filters: DiariasFilters): FilterOptionsDiaria!
 }
