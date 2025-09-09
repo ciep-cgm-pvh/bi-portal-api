@@ -2,18 +2,17 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/index.ts",
+      "src": "src/index.ts",
       "use": "@vercel/node",
       "config": {
-        "maxLambdaSize": "50mb",
-        "includeFiles": "public/data/**"
+        "includeFiles": ["prisma/**", "src/schema/**/*.graphql"]
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api"
+      "dest": "src/index.ts"
     }
   ]
 }
