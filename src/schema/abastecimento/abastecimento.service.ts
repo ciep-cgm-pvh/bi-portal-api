@@ -9,18 +9,8 @@ export class AbastecimentoService {
   private processedData: AbastecimentoProcessed[];
 
   constructor() {
-    try {
-      console.log('Loading abastecimento data...');
-      this.rawData = loadAbastecimento();
-      console.log(`Loaded ${this.rawData.length} raw abastecimento records`);
-
-      this.processedData = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(this.rawData));
-      console.log(`Processed ${this.processedData.length} abastecimento records`);
-    } catch (error) {
-      console.error('Error in AbastecimentoService constructor:', error);
-      this.rawData = [];
-      this.processedData = [];
-    }
+    this.rawData = loadAbastecimento();
+    this.processedData = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(this.rawData));
   }
 
   public getAbastecimentos(filters?: AbastecimentoFilters): AbastecimentoProcessed[] {
@@ -66,6 +56,14 @@ export class AbastecimentoService {
       filtered = filtered.filter(item => item.gasStation?.name === filters.gasStationName);
     }
 
+    // Filtro opcional para excluir veículos com "posto interno" no modelo
+    if (filters.excludePostoInterno) {
+      filtered = filtered.filter(item => {
+        const model = (item.vehicle?.model ?? '').toLowerCase();
+        return !model.includes('posto interno');
+      });
+    }
+
     return filtered;
   }
 
@@ -73,19 +71,10 @@ export class AbastecimentoService {
     let filtered = this.getAbastecimentos(filters);
     if (!tableFilters) return filtered;
 
-    // Helper: transforma string ou array em array sempre
-    const toArray = (v: string | string[] | undefined): string[] => {
-      if (!v) return [];
-      return Array.isArray(v) ? v : [ v ];
-    };
-
-    // Helper: normaliza string para comparação
-    const normalize = (s: string | undefined) => (s || '').toLowerCase().trim();
-
     if (tableFilters.datetime) {
-      const search = normalize(String(tableFilters.datetime));
+      const search = AbastecimentoProcessor.normalize(String(tableFilters.datetime));
       filtered = filtered.filter(item => {
-        const dt = item.datetime ? normalize(item.datetime) : '';
+        const dt = item.datetime ? AbastecimentoProcessor.normalize(item.datetime) : '';
         return dt.includes(search);
       });
     }
@@ -109,15 +98,15 @@ export class AbastecimentoService {
 
     // Filtros de texto (case-insensitive)
     const textFilters: { key: string; values: string[] }[] = [
-      { key: 'department', values: toArray(tableFilters.department).map(normalize) },
-      { key: 'datetime', values: toArray(tableFilters.datetime).map(normalize) },
-      { key: 'fuelType', values: toArray(tableFilters.fuelType).map(normalize) },
-      { key: 'driverName', values: toArray(tableFilters.driverName).map(normalize) },
-      { key: 'vehiclePlate', values: toArray(tableFilters.vehiclePlate).map(normalize) },
-      { key: 'vehicleModel', values: toArray(tableFilters.vehicleModel).map(normalize) },
-      { key: 'vehicleBrand', values: toArray(tableFilters.vehicleBrand).map(normalize) },
-      { key: 'gasStationCity', values: toArray(tableFilters.gasStationCity).map(normalize) },
-      { key: 'gasStationName', values: toArray(tableFilters.gasStationName).map(normalize) },
+      { key: 'department', values: AbastecimentoProcessor.toArray(tableFilters.department).map(AbastecimentoProcessor.normalize) },
+      { key: 'datetime', values: AbastecimentoProcessor.toArray(tableFilters.datetime).map(AbastecimentoProcessor.normalize) },
+      { key: 'fuelType', values: AbastecimentoProcessor.toArray(tableFilters.fuelType).map(AbastecimentoProcessor.normalize) },
+      { key: 'driverName', values: AbastecimentoProcessor.toArray(tableFilters.driverName).map(AbastecimentoProcessor.normalize) },
+      { key: 'vehiclePlate', values: AbastecimentoProcessor.toArray(tableFilters.vehiclePlate).map(AbastecimentoProcessor.normalize) },
+      { key: 'vehicleModel', values: AbastecimentoProcessor.toArray(tableFilters.vehicleModel).map(AbastecimentoProcessor.normalize) },
+      { key: 'vehicleBrand', values: AbastecimentoProcessor.toArray(tableFilters.vehicleBrand).map(AbastecimentoProcessor.normalize) },
+      { key: 'gasStationCity', values: AbastecimentoProcessor.toArray(tableFilters.gasStationCity).map(AbastecimentoProcessor.normalize) },
+      { key: 'gasStationName', values: AbastecimentoProcessor.toArray(tableFilters.gasStationName).map(AbastecimentoProcessor.normalize) },
     ];
 
     for (const { key, values } of textFilters) {
@@ -137,9 +126,9 @@ export class AbastecimentoService {
             const val = item[ key as keyof AbastecimentoProcessed ];
             fieldValue = val != null ? String(val) : '';
           }
-          fieldValue = normalize(fieldValue); // agora sempre é string
+          fieldValue = AbastecimentoProcessor.normalize(fieldValue); // agora sempre é string
 
-          return values.some(term => fieldValue.includes(term));
+          return values.some(term => fieldValue.toLowerCase().includes(term));
         });
       }
     }
@@ -148,12 +137,13 @@ export class AbastecimentoService {
   }
 
   public getLastUpdate() {
-    // Supondo que rawData tenha um campo 'Data' no formato 'DD/MM/YYYY'
-    const dates = this.rawData
-      .map(item => item.Data)
+    const dates = this.getAbastecimentos()
+      .map(item => item.datetime)
       .filter(Boolean)
       .map((dateStr: string) => {
-        const [ day, month, year ] = dateStr.split('/').map(Number);
+        // Pega apenas a parte da data antes do espaço
+        const [ datePart ] = dateStr.split(" "); // "31/07/2025"
+        const [ day, month, year ] = datePart.split("/").map(Number);
         return new Date(year, month - 1, day);
       })
       .filter((date: Date) => !isNaN(date.getTime()));
@@ -161,7 +151,13 @@ export class AbastecimentoService {
     if (dates.length === 0) return null;
 
     const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
-    return latestDate;
+
+    // Retorna só no formato DD/MM/YYYY
+    const day = String(latestDate.getDate()).padStart(2, "0");
+    const month = String(latestDate.getMonth() + 1).padStart(2, "0");
+    const year = latestDate.getFullYear();
+
+    return `${year}-${month}-${day}`;
   }
 
   public getKpis(filters?: AbastecimentoFilters) {
@@ -186,7 +182,7 @@ export class AbastecimentoService {
   }
 
   public getVehicleSummary() {
-    const data = this.processedData;
+    const data = this.getAbastecimentos();
 
     // Agrupar por veículo + departamento
     const summaryMap: Record<string, { vehicle: any; department: string; totalCost: number; supplyCount: number }> = {};
@@ -297,7 +293,7 @@ export class AbastecimentoService {
 
   public getFilterOptions(filters: any) {
     // 1. Filtra os dados com base no que já foi selecionado
-    let filtered = this.processedData;
+    let filtered = this.getAbastecimentos();
 
     if (filters.department) {
       filtered = filtered.filter(item => item.department === filters.department);

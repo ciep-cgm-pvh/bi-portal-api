@@ -72,6 +72,16 @@ export const AbastecimentoProcessor = {
     const year = Number(String(value).slice(0, 4));
     return Number.isInteger(year) ? year : null;
   },
+  // Helper: transforma string ou array em array sempre
+  toArray(v: string | string[] | undefined): string[] {
+    if (!v) return [];
+    return Array.isArray(v) ? v : [ v ];
+  },
+
+  // Helper: normaliza string para comparação
+  normalize(s: string | undefined) { 
+    return (s || '').toLowerCase().trim(); 
+  },
 
   // Processa uma linha individual
   processRow(row: Record<string, string | number>): ProcessedAbastecimentoRow {

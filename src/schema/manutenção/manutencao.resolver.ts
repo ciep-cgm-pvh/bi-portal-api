@@ -1,6 +1,6 @@
 // manutencao.resolver.ts - Manutenção
 import { ManutencaoService } from './manutencao.service';
-import { ManutencaoFilters, ManutencaoTableFilters } from './utils/types';
+import { ManutencaoFilters } from './utils/types';
 
 const manutencaoService = new ManutencaoService();
 

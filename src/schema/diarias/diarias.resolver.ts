@@ -1,46 +1,41 @@
-// src/schema/diarias/diarias.resolver.ts
-import { loadDiarias } from '../../data/loadDiarias';
+import { DiariasService } from './diarias.service';
+import { DiariasFilters } from './utils/types';
 
-// Supondo que você tenha uma definição de tipo para DiariaFilters em algum lugar.
-// Se não, você pode usar 'any' por enquanto.
-interface DiariaFilters {
-  startDate?: string;
-  endDate?: string;
-  organ?: string[];
-  situation?: string[];
-}
+const diariasService = new DiariasService()
 
-const diariasResolvers = () => ({
+export const diariasResolvers = () => ({
   Query: {
-    // Corrigido para aceitar o argumento 'filters'
-    diarias: async (_: any, { filters }: { filters?: DiariaFilters }) => {
-      console.log('Filtros recebidos:', filters); // Para depuração
-      const data = await loadDiarias();
-      // TODO: Aplicar a lógica de filtragem aqui com base nos 'filters'
-      return data;
+    getDiarias: (_: unknown, { filters }: { filters?: DiariasFilters }) => {
+      return diariasService.getDiariasData(filters)
     },
 
-    // Adicionados placeholders para os resolvers que estavam faltando
-    kpis: async (_: any, { filters }: { filters?: DiariaFilters }) => {
-      // TODO: Implementar a lógica para os KPIs
-      console.log('Filtros para KPIs:', filters);
-      return { totalGasto: "0", totalDiarias: 0 };
+    getDiariasTable(_: unknown, args: any) {
+      return diariasService.getDiariasTableData(
+        args.limit,
+        args.offset,
+        args.sortBy,
+        args.sortDirection,
+        args.filters,
+        args.tableFilters)
     },
-    topOrgaos: async (_: any, { filters }: { filters?: DiariaFilters }) => {
-      // TODO: Implementar a lógica para o Top Órgãos
-      console.log('Filtros para Top Orgaos:', filters);
-      return [];
+
+    getDiariasTableCount(_: unknown, args: any) {
+      return diariasService.getTableCount(args.filters, args.tableFilters)
     },
-    gastoMensal: async (_: any, { filters }: { filters?: DiariaFilters }) => {
-      // TODO: Implementar a lógica para o Gasto Mensal
-      console.log('Filtros para Gasto Mensal:', filters);
-      return [];
+
+    getDiariasKpi(_: unknown, { filters }: { filters?: DiariasFilters }) {
+      return diariasService.getKpi(filters)
     },
-    filterOptions: async () => {
-      // TODO: Implementar a lógica para as opções de filtro
-      return { organ: [], situation: [] };
+
+    getDiariasCharts(_: unknown, { filters }: { filters?: DiariasFilters }) {
+      return diariasService.getCharts(filters)
     },
+    getDiariasFiltersOptions(_: unknown, { filters }: { filters?: DiariasFilters }) {
+      return diariasService.getFilterOptions(filters)
+    },
+
+    getDiariasLastUpdate() {
+      return diariasService.getLastUpdate()
+    }
   },
 });
-
-export default diariasResolvers;
