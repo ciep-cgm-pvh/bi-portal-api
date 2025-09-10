@@ -30,7 +30,7 @@ export const ManutencaoProcessor = {
   },
 
   //Recebe uma data com milissegundos e retorna no formato yyyy-mm-dd hh:mm:ss
-  formatDate(dateInput?: string | null): string | null {
+  formatDateISO(dateInput?: string | null): string | null {
     if (!dateInput) return null;
     const date = new Date(dateInput);
     if (isNaN(date.getTime())) return null;
@@ -40,6 +40,18 @@ export const ManutencaoProcessor = {
     const dd = String(date.getDate()).padStart(2, '0');
 
     return `${yyyy}-${mm}-${dd}`;
+  },
+
+  formatDatePTBR(dateInput?: string | null): string | null {
+    if (!dateInput) return null;
+    const date = new Date(dateInput);
+    if (isNaN(date.getTime())) return null;
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+
+    return `${dd}/${mm}/${yyyy}`;
   },
 
   // Converte uma string ou array de strings em array de strings
@@ -121,8 +133,8 @@ export const ManutencaoProcessor = {
     // filtros da tabela (busca parcial)
     if (tableFilters) {
       if (tableFilters.datetime) {
-        const search = tableFilters.datetime.toLowerCase();
-        filtered = filtered.filter(item => item.datetime?.toLowerCase().includes(search));
+        const search = String(tableFilters.datetime.toLowerCase());
+        filtered = filtered.filter(item => String(item.datetime).toLowerCase().includes(search));
       }
 
       if (tableFilters.os !== undefined && tableFilters.os !== null && String(tableFilters.os) !== '') {
@@ -155,7 +167,7 @@ export const ManutencaoProcessor = {
       const value = row[ key ];
 
       if (key === 'Data' && value) {
-        processed[ key ] = ManutencaoProcessor.formatDate(String(value));
+        processed[ key ] = ManutencaoProcessor.formatDatePTBR(String(value));
         continue;
       }
 
