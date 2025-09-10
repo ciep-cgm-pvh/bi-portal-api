@@ -4,7 +4,7 @@ import path from 'path';
 import { Abastecimento } from '../schema/abastecimento/utils/types';
 
 export function loadAbastecimento(): Abastecimento[] {
-  const filePath = path.resolve(__dirname, '../../public/data/Abastecimentos31_07_2025 - prefeitura - geral.csv');
+  const filePath = path.resolve(__dirname, '../../public/data/abastecimentos-geral.csv');
   const fileContent = fs.readFileSync(filePath, 'utf8');
 
   const data = parse(fileContent, {
