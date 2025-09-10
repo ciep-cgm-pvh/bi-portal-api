@@ -48,7 +48,6 @@ export class ManutencaoService {
 
     filtered = filtered.slice(start, end);
 
-
     return filtered;
   }
 
