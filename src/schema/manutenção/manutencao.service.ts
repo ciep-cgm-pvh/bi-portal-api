@@ -78,26 +78,26 @@ export class ManutencaoService {
 
   public getLastUpdate() {
     // Pega todas as datas válidas
-    const dates = this.getManutencao()
-      .map(item => item.datetime)
+    const dates = this.getManutencao().map(item => item.datetime)
       .filter(Boolean)
       .map((dateStr: string) => {
-        // Substitui espaço por 'T' para garantir que o JS interprete corretamente
-        const isoStr = dateStr.replace(' ', 'T');
-        return new Date(isoStr);
+        // Pega apenas a parte da data antes do espaço
+        const [ datePart ] = dateStr.split(" "); // "31/07/2025"
+        const [ day, month, year ] = datePart.split("/").map(Number);
+        return new Date(year, month - 1, day);
       })
       .filter((date: Date) => !isNaN(date.getTime()));
 
-    // Se não houver datas válidas, retorna a data atual como fallback
-    const latestDate = dates.length > 0
-      ? new Date(Math.max(...dates.map(d => d.getTime())))
-      : new Date();
+    if (dates.length === 0) return null;
 
-    const yyyy = latestDate.getFullYear();
-    const mm = String(latestDate.getMonth() + 1).padStart(2, '0');
-    const dd = String(latestDate.getDate()).padStart(2, '0');
+    const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
 
-    return `${yyyy}-${mm}-${dd}`;
+    // Retorna só no formato DD/MM/YYYY
+    const day = String(latestDate.getDate()).padStart(2, "0");
+    const month = String(latestDate.getMonth() + 1).padStart(2, "0");
+    const year = latestDate.getFullYear();
+
+    return `${year}-${month}-${day}`;
   }
 
   public getManutencaoCharts(filters?: ManutencaoFilters) {
