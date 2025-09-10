@@ -32,28 +32,33 @@ export class AbastecimentoService {
     }
 
     // Filtro por departamento
-    if (filters.department && filters.department !== '') {
-      filtered = filtered.filter(item => item.department === filters.department);
+    if (filters.department) {
+      const val = filters.department.toLowerCase();
+      filtered = filtered.filter(item => item.department?.toLowerCase().includes(val));
     }
 
     // Filtro por placa
-    if (filters.vehiclePlate && filters.vehiclePlate !== '') {
-      filtered = filtered.filter(item => item.vehicle?.plate === filters.vehiclePlate);
+    if (filters.vehiclePlate) {
+      const val = filters.vehiclePlate.toLowerCase();
+      filtered = filtered.filter(item => item.vehicle?.plate.toLowerCase().includes(val));
     }
 
     // Filtro por modelo
-    if (filters.vehicleModel && filters.vehicleModel !== '') {
-      filtered = filtered.filter(item => item.vehicle?.model === filters.vehicleModel);
+    if (filters.vehicleModel) {
+      const val = filters.vehicleModel.toLowerCase();
+      filtered = filtered.filter(item => item.vehicle?.model.toLowerCase().includes(val));
     }
 
     // Filtro por cidade do posto
-    if (filters.gasStationCity && filters.gasStationCity !== '') {
-      filtered = filtered.filter(item => item.gasStation?.city === filters.gasStationCity);
+    if (filters.gasStationCity) {
+      const val = filters.gasStationCity.toLowerCase();
+      filtered = filtered.filter(item => item.gasStation?.city.toLowerCase().includes(val));
     }
 
     // Filtro por nome do posto
-    if (filters.gasStationName && filters.gasStationName !== '') {
-      filtered = filtered.filter(item => item.gasStation?.name === filters.gasStationName);
+    if (filters.gasStationName) {
+      const val = filters.gasStationName.toLowerCase();
+      filtered = filtered.filter(item => item.gasStation?.name.toLowerCase().includes(val));
     }
 
     // Filtro opcional para excluir veículos com "posto interno" no modelo
@@ -71,28 +76,25 @@ export class AbastecimentoService {
     let filtered = this.getAbastecimentos(filters);
     if (!tableFilters) return filtered;
 
+
+    
     if (tableFilters.datetime) {
-      const search = AbastecimentoProcessor.normalize(String(tableFilters.datetime));
-      filtered = filtered.filter(item => {
-        const dt = item.datetime ? AbastecimentoProcessor.normalize(item.datetime) : '';
-        return dt.includes(search);
-      });
+      const search = tableFilters.datetime.toLowerCase();
+      filtered = filtered.filter(item => item.datetime?.toLowerCase().includes(search));
     }
   
     // --- Numeric Filters (busca parcial) ---
     if (tableFilters.cost) {
       const searchCost = String(tableFilters.cost).replace(',', '.').trim();
       filtered = filtered.filter(item =>
-        item.cost != null &&
-        String(item.cost).includes(searchCost)
+        item.cost?.toString().toLowerCase().includes(searchCost)
       );
     }
 
     if (tableFilters.fuelVolume) {
       const searchFuel = String(tableFilters.fuelVolume).replace(',', '.').trim();
       filtered = filtered.filter(item =>
-        item.fuelVolume != null &&
-        String(item.fuelVolume).includes(searchFuel)
+        item.fuelVolume?.toString().toLowerCase().includes(searchFuel)
       );
     }
 
