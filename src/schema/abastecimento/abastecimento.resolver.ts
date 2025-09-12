@@ -26,13 +26,13 @@ const abastecimentoResolvers = () => ({
     },
 
     // ✅ count baseado no mesmo conjunto filtrado da tabela
-    abastecimentosCount: (_: unknown, { filters, tableFilters }: any) => {
+    getAbastecimentosTableCount: (_: unknown, { filters, tableFilters }: any) => {
       const data = abastecimentoService.getAbastecimentosTable(filters, tableFilters);
       return data.length;
     },
 
     // KPIs
-    abastecimentoKpis: (_: unknown, { filters }: { filters?: AbastecimentoFilters }) => {
+    getAbastecimentoKpi: (_: unknown, { filters }: { filters?: AbastecimentoFilters }) => {
       const {
         totalGasto,
         totalLitros,
@@ -52,7 +52,7 @@ const abastecimentoResolvers = () => ({
       };
     },
 
-    vehicleSummary: () => {
+    getAbastecimentoVehicleSummary: () => {
       return abastecimentoService.getVehicleSummary();
     },
 
@@ -230,20 +230,20 @@ const abastecimentoResolvers = () => ({
       return Array.from(map, ([ department, total ]) => ({ department, total })).sort((a, b) => b.total - a.total);
     },
 
-    abastecimentosColumns: () => {
+    getAbastecimentosColumns: () => {
       return [
-        { headerLabel: "Data", accessor: "datetime", isSortable: true, dataType: "date", isFilterable: true, filterKey: "datetime" },
-        { headerLabel: "Custo", accessor: "cost", isSortable: true, dataType: "currency", isFilterable: true, filterKey: "cost" },
-        { headerLabel: "Litros", accessor: "fuelVolume", isSortable: true, dataType: "number", isFilterable: true, filterKey: "fuelVolume" },
-        { headerLabel: "Tipo Combustível", accessor: "fuelType", isSortable: true, dataType: "string", isFilterable: true, filterKey: "fuelType" },
-        { headerLabel: "Motorista", accessor: "driverName", isSortable: true, dataType: "string", isFilterable: true, filterKey: "driverName" },
-        { headerLabel: "Placa", accessor: "vehicle.plate", isSortable: true, dataType: "string", isFilterable: true, filterKey: "vehiclePlate" },
-        { headerLabel: "Modelo", accessor: "vehicle.model", isSortable: true, dataType: "string", isFilterable: true, filterKey: "vehicleModel" },
-        { headerLabel: "Marca", accessor: "vehicle.brand", isSortable: true, dataType: "string", isFilterable: true, filterKey: "vehicleBrand" },
-        { headerLabel: "Posto", accessor: "gasStation.name", isSortable: true, dataType: "string", isFilterable: true, filterKey: "gasStationName" },
-        { headerLabel: "Cidade", accessor: "gasStation.city", isSortable: true, dataType: "string", isFilterable: true, filterKey: "gasStationCity" },
-        { headerLabel: "Órgão/Departamento", accessor: "department", isSortable: true, dataType: "string", isFilterable: true, filterKey: "department" },
-        // { headerLabel: "Centro de Custo", accessor: "costCenter", isSortable: true, dataType: "string", isFilterable: true, filterKey: "costCenter" },
+        { header: "Data", accessor: "datetime", sortable: true, dataType: "date", isFilterable: true, filterKey: "datetime" },
+        { header: "Custo", accessor: "cost", sortable: true, dataType: "currency", isFilterable: true, filterKey: "cost" },
+        { header: "Litros", accessor: "fuelVolume", sortable: true, dataType: "number", isFilterable: true, filterKey: "fuelVolume" },
+        { header: "Tipo Combustível", accessor: "fuelType", sortable: true, dataType: "string", isFilterable: true, filterKey: "fuelType" },
+        { header: "Motorista", accessor: "driverName", sortable: true, dataType: "string", isFilterable: true, filterKey: "driverName" },
+        { header: "Placa", accessor: "vehicle.plate", sortable: true, dataType: "string", isFilterable: true, filterKey: "vehiclePlate" },
+        { header: "Modelo", accessor: "vehicle.model", sortable: true, dataType: "string", isFilterable: true, filterKey: "vehicleModel" },
+        { header: "Marca", accessor: "vehicle.brand", sortable: true, dataType: "string", isFilterable: true, filterKey: "vehicleBrand" },
+        { header: "Posto", accessor: "gasStation.name", sortable: true, dataType: "string", isFilterable: true, filterKey: "gasStationName" },
+        { header: "Cidade", accessor: "gasStation.city", sortable: true, dataType: "string", isFilterable: true, filterKey: "gasStationCity" },
+        { header: "Órgão/Departamento", accessor: "department", sortable: true, dataType: "string", isFilterable: true, filterKey: "department" },
+        // { header: "Centro de Custo", accessor: "costCenter", sortable: true, dataType: "string", isFilterable: true, filterKey: "costCenter" },
       ];
     }
   }
