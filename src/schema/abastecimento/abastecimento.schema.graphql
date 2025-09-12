@@ -67,9 +67,9 @@ type Abastecimento {
 }
 
 type AbastecimentoColumn {
-  headerLabel: String!
+  header: String!
   accessor: String!
-  isSortable: Boolean!
+  sortable: Boolean!
   dataType: String!
   isFilterable: Boolean!
   filterKey: String
@@ -159,12 +159,12 @@ type Query {
     tableFilters: AbastecimentoTableFiltersInput
   ): [Abastecimento!]!
 
-  abastecimentosCount(
+  getAbastecimentosTableCount(
     filters: AbastecimentoFiltersInput
     tableFilters: AbastecimentoTableFiltersInput
     ): Int!
-  abastecimentoKpis(filters: AbastecimentoFiltersInput): AbastecimentoKpis!
-  vehicleSummary: [vehicleSummary]
+  getAbastecimentoKpi(filters: AbastecimentoFiltersInput): AbastecimentoKpis!
+  getAbastecimentoVehicleSummary: [vehicleSummary]
 
   departmentOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
   vehiclePlateOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
@@ -186,5 +186,5 @@ type Query {
     filters: AbastecimentoFiltersInput
   ): [RankingByDepartment!]!
 
-  abastecimentosColumns: [AbastecimentoColumn!]!
+  getAbastecimentosColumns: [AbastecimentoColumn!]!
 }
