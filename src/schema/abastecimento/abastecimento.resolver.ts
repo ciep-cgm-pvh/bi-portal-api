@@ -56,41 +56,24 @@ const abastecimentoResolvers = () => ({
       return abastecimentoService.getVehicleSummary();
     },
 
-    // opções de filtro
-    vehiclePlateOptions: (_: unknown, args: { filters: AbastecimentoOptionsFilters }) => {
-      const placas = abastecimentoService.getFilterOptions(args.filters).placa;
-      return placas.sort().map((p) => ({ value: p, label: p }));
-    },
-
-    departmentOptions: (_: unknown, args: { filters: AbastecimentoOptionsFilters }) => {
-      const departments = abastecimentoService.getFilterOptions(args.filters).orgao;
-      return departments.sort().map((d) => ({ value: d, label: d }));
-    },
-
-    vehicleModelOptions: (_: unknown, args: { filters: AbastecimentoOptionsFilters }) => {
-      const models = abastecimentoService.getFilterOptions(args.filters).modelo;
-      return models.sort().map((m) => ({ value: m, label: m }));
-    },
-
-    gasStationCityOptions: (_: unknown, args: { filters: AbastecimentoOptionsFilters }) => {
-      const cities = abastecimentoService.getFilterOptions(args.filters).cidadePosto;
-      return cities.sort().map((c) => ({ value: c, label: c }));
-    },
-
-    gasStationNameOptions: (_: unknown, args: { filters: AbastecimentoOptionsFilters }) => {
-      const names = abastecimentoService.getFilterOptions(args.filters).nomePosto;
-      return names.sort().map(n => ({ value: n, label: n }));
+    AbastecimentoFilterOptions: (_: unknown, { filters }: { filters?: AbastecimentoOptionsFilters }) => {
+      return abastecimentoService.getFilterOptions(filters);
     },
 
     // gráficos
-    costByVehicle: (_: unknown, { filters }: { filters?: AbastecimentoFilters }) => {
+    costByVehicle: (_: unknown, args: { vehicleLimit?: number, filters?: AbastecimentoFilters }) => {
+      const { vehicleLimit = 10, filters } = args;
       const data = abastecimentoService.getAbastecimentos(filters);
+
       const totals = data.reduce<Record<string, number>>((acc, item) => {
         const vehicle = item.vehicle?.plate || "N/A";
         acc[ vehicle ] = (acc[ vehicle ] || 0) + (item.cost || 0);
         return acc;
       }, {});
-      return Object.entries(totals).map(([ vehicle, total ]) => ({ vehicle, total }));
+      return Object.entries(totals)
+        .map(([ vehicle, total ]) => ({ vehicle, total }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, vehicleLimit);
     },
 
     costByDepartment: (_: unknown, { filters }: { filters?: any }) => {
@@ -157,7 +140,6 @@ const abastecimentoResolvers = () => ({
     rankingByDate: async (_: unknown, { filters }: { filters?: any }) => {
       const data = await abastecimentoService.getAbastecimentos(filters);
 
-      // Se houver dateRange, filtra os dados antes de agrupar
       let filteredData = data;
       if (filters?.dateRange?.from && filters?.dateRange?.to) {
         const from = new Date(filters.dateRange.from);
@@ -170,10 +152,13 @@ const abastecimentoResolvers = () => ({
         });
       }
 
-      // Agrupa custo por data
       const totals = filteredData.reduce<Record<string, number>>((acc, item) => {
         const dateObj = new Date(item.datetime);
-        const dateStr = dateObj.toISOString().substring(0, 10);
+        const dateStr = dateObj.toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+        });
         acc[ dateStr ] = (acc[ dateStr ] || 0) + (item.cost || 0);
         return acc;
       }, {});
@@ -182,11 +167,6 @@ const abastecimentoResolvers = () => ({
       return Object.entries(totals)
         .map(([ date, total ]) => ({ date, total }))
         .sort((a, b) => b.total - a.total); // ordem decrescente pelo total
-
-      // // Converte para array e ordena por data
-      // return Object.entries(totals)
-      //   .map(([ date, total ]) => ({ date, total }))
-      //   .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
     },
 
     rankingByPlate: async (_: unknown, { filters }: { filters?: any }) => {

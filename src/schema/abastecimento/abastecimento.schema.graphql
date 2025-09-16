@@ -11,7 +11,7 @@ input AbastecimentoFiltersInput {
   vehiclePlate: String
   vehicleBrand: String
   driverName: String
-  department: String # ou String, se quiser só um valor
+  department: String 
   vehicleModel: String
   gasStationCity: String
   gasStationName: String
@@ -21,7 +21,7 @@ input AbastecimentoFiltersInput {
 input AbastecimentoFiltersOptionsInput {
   fuelType: String
   vehiclePlate: String
-  department: String # ou String, se quiser só um valor
+  department: String
   vehicleModel: String
   gasStationCity: String
   gasStationName: String
@@ -92,9 +92,17 @@ type vehicleSummary {
   supplyCount: Int
 }
 
-type FilterOption {
+type FilterType {
   value: String
   label: String
+}
+
+type FilterOption {
+  departmentOptions: [FilterType!]
+  vehiclePlateOptions: [FilterType!]
+  vehicleModelOptions: [FilterType!]
+  gasStationCityOptions: [FilterType!]
+  gasStationNameOptions: [FilterType!]
 }
 
 type CostByVehicle {
@@ -166,13 +174,9 @@ type Query {
   getAbastecimentoKpi(filters: AbastecimentoFiltersInput): AbastecimentoKpis!
   getAbastecimentoVehicleSummary: [vehicleSummary]
 
-  departmentOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
-  vehiclePlateOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
-  vehicleModelOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
-  gasStationCityOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
-  gasStationNameOptions(filters: AbastecimentoFiltersOptionsInput): [FilterOption]
+  AbastecimentoFilterOptions(filters: AbastecimentoFiltersOptionsInput): FilterOption!
 
-  costByVehicle(filters: AbastecimentoFiltersInput): [CostByVehicle!]!
+  costByVehicle(vehicleLimit: Int filters: AbastecimentoFiltersInput): [CostByVehicle!]!
   costByDepartment(filters: AbastecimentoFiltersInput): [CostByDepartment!]!
   costByCity(filters: AbastecimentoFiltersInput): [CostByCity!]!
   costByGasStation(filters: AbastecimentoFiltersInput): [CostByGasStation!]!

@@ -1,5 +1,5 @@
 // AbastecimentoService.ts
-import { AbastecimentoProcessed, AbastecimentoFilters, AbastecimentoTableFilters } from './utils/types';
+import { AbastecimentoProcessed, AbastecimentoFilters, AbastecimentoTableFilters, AbastecimentoOptionsFilters } from './utils/types';
 import { loadAbastecimento } from '../../data/loadAbastecimento';
 import { mapToProcessed } from './utils/mapToProcessed';
 import { AbastecimentoProcessor } from './abastecimentoProcessor';
@@ -214,6 +214,20 @@ export class AbastecimentoService {
   
   }
 
+  public getFilterOptions(filters?: AbastecimentoOptionsFilters) {
+    const options = this.FilterOptions(filters ?? {});
+
+    return {
+      departmentOptions: options.orgao.map((d) => ({ value: d, label: d })),
+      vehiclePlateOptions: options.placa.map((p) => ({ value: p, label: p })),
+      vehicleModelOptions: options.modelo.map((m) => ({ value: m, label: m })),
+      gasStationCityOptions: options.cidadePosto.map((c) => ({ value: c, label: c })),
+      gasStationNameOptions: options.nomePosto.map((n) => ({ value: n, label: n })),
+    };
+  }
+
+
+
   public getGastoPorOrgao(filters?: AbastecimentoFilters) {
     const data = this.getAbastecimentos(filters);
     const gastosPorOrgao = data.reduce<Record<string, number>>((acc, item) => {
@@ -293,8 +307,7 @@ export class AbastecimentoService {
       .map(([ date, total ]) => ({ date, total }));
   }
 
-  public getFilterOptions(filters: any) {
-    // 1. Filtra os dados com base no que já foi selecionado
+  public FilterOptions(filters: Partial<AbastecimentoOptionsFilters> = {}) {
     let filtered = this.getAbastecimentos();
 
     if (filters.department) {
@@ -302,34 +315,28 @@ export class AbastecimentoService {
     }
 
     if (filters.vehiclePlate) {
-      filtered = filtered.filter(item => item.vehicle.plate === filters.vehiclePlate);
+      filtered = filtered.filter(item => item.vehicle?.plate === filters.vehiclePlate);
     }
 
     if (filters.vehicleModel) {
-      filtered = filtered.filter(item => item.vehicle.model === filters.vehicleModel);
+      filtered = filtered.filter(item => item.vehicle?.model === filters.vehicleModel);
     }
 
     if (filters.gasStationCity) {
-      filtered = filtered.filter(item => item.gasStation.city === filters.gasStationCity);
+      filtered = filtered.filter(item => item.gasStation?.city === filters.gasStationCity);
     }
 
     if (filters.gasStationName) {
-      filtered = filtered.filter(item => item.gasStation.name === filters.gasStationName);
+      filtered = filtered.filter(item => item.gasStation?.name === filters.gasStationName);
     }
 
-    // 2. Extrai os valores possíveis desse conjunto filtrado
-    const orgaoOptions = Array.from(new Set(filtered.map(item => item.department).filter(Boolean))).sort();
-    const placaOptions = Array.from(new Set(filtered.map(item => item.vehicle.plate).filter(Boolean))).sort();
-    const modelOptions = Array.from(new Set(filtered.map(item => item.vehicle.model).filter(Boolean))).sort();
-    const gasStationCityOptions = Array.from(new Set(filtered.map(item => item.gasStation.city).filter(Boolean))).sort();
-    const gasStationNameOptions = Array.from(new Set(filtered.map(item => item.gasStation.name).filter(Boolean))).sort();
-
     return {
-      orgao: orgaoOptions,
-      placa: placaOptions,
-      modelo: modelOptions,
-      cidadePosto: gasStationCityOptions,
-      nomePosto: gasStationNameOptions
+      orgao: [ ...new Set(filtered.map(item => item.department).filter(Boolean)) ].sort(),
+      placa: [ ...new Set(filtered.map(item => item.vehicle?.plate).filter(Boolean)) ].sort(),
+      modelo: [ ...new Set(filtered.map(item => item.vehicle?.model).filter(Boolean)) ].sort(),
+      cidadePosto: [ ...new Set(filtered.map(item => item.gasStation?.city).filter(Boolean)) ].sort(),
+      nomePosto: [ ...new Set(filtered.map(item => item.gasStation?.name).filter(Boolean)) ].sort(),
     };
   }
+
 }
