@@ -18,31 +18,20 @@ export class DiariasService {
   }
 
   public getDiariasTableData(
-      limit?: any,
-      offset?: any,
-      sortBy?: any,
+      limit?: number,
+      offset?: number,
+      sortBy?: string,
       sortDirection?: any,
       filters?: DiariasFilters,
       tableFilters?: DiariasTableFilters) {
       // pega dados já filtrados pelo getManutencao (dateRange + filtros gerais)
       let filtered = Processor.applyFilters(this.getDiariasData(filters), filters, tableFilters);
     
-      // Normaliza sortBy e sortDirection
-      const finalSortBy = sortBy?.toString().trim() || "datetime";
-      const finalSortDirection = (sortDirection || "ascending").toString();
-    
-      // Ordena
-      filtered = Processor.sortData(filtered, finalSortBy, finalSortDirection as any);
-    
-      // Converte limit/offset para números válidos
-      const l = Number(limit);
-      const o = Number(offset);
-    
-      // Aplica paginação de forma simples
-      const start = !isNaN(o) && o >= 0 ? o : 0;
-      const end = !isNaN(l) && l > 0 ? start + l : undefined;
-    
-      filtered = filtered.slice(start, end);
+    filtered = Processor.sortData(filtered, sortBy, (sortDirection || "ascending"))
+
+    if (typeof offset === 'number' && typeof limit === 'number') {
+      filtered = filtered.slice(offset, offset + limit);
+    }
     
     return filtered;
   }
