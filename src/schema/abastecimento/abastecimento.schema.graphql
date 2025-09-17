@@ -156,6 +156,20 @@ type RankingByDepartment {
   total: Float!
 }
 
+type AbastecimentoCharts {
+  costByVehicle: [CostByVehicle!]!
+  costByDepartment: [CostByDepartment!]!
+  costByCity: [CostByCity!]!
+  costByGasStation: [CostByGasStation!]!
+  costByPlate: [CostByPlate!]!
+  costByDate: [CostByDate!]!
+  costOverTime: [CostOverTime!]!
+
+  rankingByDate: [RankingByDate!]!
+  rankingByPlate: [RankingByPlate!]!
+  rankingByDepartment: [RankingByDepartment!]!
+}
+
 type Query {
   getAbastecimentos(filters: AbastecimentoFiltersInput): [Abastecimento!]!
   getAbastecimentosTable(
@@ -176,19 +190,7 @@ type Query {
 
   AbastecimentoFilterOptions(filters: AbastecimentoFiltersOptionsInput): FilterOption!
 
-  costByVehicle(vehicleLimit: Int filters: AbastecimentoFiltersInput): [CostByVehicle!]!
-  costByDepartment(filters: AbastecimentoFiltersInput): [CostByDepartment!]!
-  costByCity(filters: AbastecimentoFiltersInput): [CostByCity!]!
-  costByGasStation(filters: AbastecimentoFiltersInput): [CostByGasStation!]!
-  costByPlate(filters: AbastecimentoFiltersInput): [CostByPlate!]!
-  costByDate(filters: AbastecimentoFiltersInput): [CostByDate!]!
-  costOverTime(filters: AbastecimentoFiltersInput): [CostOverTime!]!
-
-  rankingByDate(filters: AbastecimentoFiltersInput): [RankingByDate!]!
-  rankingByPlate(filters: AbastecimentoFiltersInput): [RankingByPlate!]!
-  rankingByDepartment(
-    filters: AbastecimentoFiltersInput
-  ): [RankingByDepartment!]!
+  getAbastecimentoCharts(vehicleLimit: Int, filters: AbastecimentoFiltersInput): AbastecimentoCharts!
 
   getAbastecimentosColumns: [AbastecimentoColumn!]!
 }

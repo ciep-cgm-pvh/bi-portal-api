@@ -3,6 +3,7 @@ import { AbastecimentoProcessed, AbastecimentoFilters, AbastecimentoTableFilters
 import { loadAbastecimento } from '../../data/loadAbastecimento';
 import { mapToProcessed } from './utils/mapToProcessed';
 import { AbastecimentoProcessor } from './abastecimentoProcessor';
+import { Processor } from '../../utils/processor';
 
 export class AbastecimentoService {
   private rawData: any[];
@@ -25,7 +26,7 @@ export class AbastecimentoService {
 
       filtered = filtered.filter(item => {
         if (!item.datetime) return false;
-        const dt = AbastecimentoProcessor.parseDate(item.datetime);
+        const dt = Processor.parseDateDMY(item.datetime);
         if (!dt) return false;
         return dt >= from && dt <= to;
       });
@@ -72,7 +73,7 @@ export class AbastecimentoService {
     return filtered;
   }
 
-  public getAbastecimentosTable( filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): AbastecimentoProcessed[] {
+  public getAbastecimentosTable(limit?: number, offset?: number, sortBy?: string, sortDirection?: any, filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): AbastecimentoProcessed[] {
     let filtered = this.getAbastecimentos(filters);
     if (!tableFilters) return filtered;
 
@@ -100,15 +101,15 @@ export class AbastecimentoService {
 
     // Filtros de texto (case-insensitive)
     const textFilters: { key: string; values: string[] }[] = [
-      { key: 'department', values: AbastecimentoProcessor.toArray(tableFilters.department).map(AbastecimentoProcessor.normalize) },
-      { key: 'datetime', values: AbastecimentoProcessor.toArray(tableFilters.datetime).map(AbastecimentoProcessor.normalize) },
-      { key: 'fuelType', values: AbastecimentoProcessor.toArray(tableFilters.fuelType).map(AbastecimentoProcessor.normalize) },
-      { key: 'driverName', values: AbastecimentoProcessor.toArray(tableFilters.driverName).map(AbastecimentoProcessor.normalize) },
-      { key: 'vehiclePlate', values: AbastecimentoProcessor.toArray(tableFilters.vehiclePlate).map(AbastecimentoProcessor.normalize) },
-      { key: 'vehicleModel', values: AbastecimentoProcessor.toArray(tableFilters.vehicleModel).map(AbastecimentoProcessor.normalize) },
-      { key: 'vehicleBrand', values: AbastecimentoProcessor.toArray(tableFilters.vehicleBrand).map(AbastecimentoProcessor.normalize) },
-      { key: 'gasStationCity', values: AbastecimentoProcessor.toArray(tableFilters.gasStationCity).map(AbastecimentoProcessor.normalize) },
-      { key: 'gasStationName', values: AbastecimentoProcessor.toArray(tableFilters.gasStationName).map(AbastecimentoProcessor.normalize) },
+      { key: 'department', values: Processor.toArray(tableFilters.department).map(Processor.normalize) },
+      { key: 'datetime', values: Processor.toArray(tableFilters.datetime).map(Processor.normalize) },
+      { key: 'fuelType', values: Processor.toArray(tableFilters.fuelType).map(Processor.normalize) },
+      { key: 'driverName', values: Processor.toArray(tableFilters.driverName).map(Processor.normalize) },
+      { key: 'vehiclePlate', values: Processor.toArray(tableFilters.vehiclePlate).map(Processor.normalize) },
+      { key: 'vehicleModel', values: Processor.toArray(tableFilters.vehicleModel).map(Processor.normalize) },
+      { key: 'vehicleBrand', values: Processor.toArray(tableFilters.vehicleBrand).map(Processor.normalize) },
+      { key: 'gasStationCity', values: Processor.toArray(tableFilters.gasStationCity).map(Processor.normalize) },
+      { key: 'gasStationName', values: Processor.toArray(tableFilters.gasStationName).map(Processor.normalize) },
     ];
 
     for (const { key, values } of textFilters) {
@@ -128,11 +129,17 @@ export class AbastecimentoService {
             const val = item[ key as keyof AbastecimentoProcessed ];
             fieldValue = val != null ? String(val) : '';
           }
-          fieldValue = AbastecimentoProcessor.normalize(fieldValue); // agora sempre é string
+          fieldValue = Processor.normalize(fieldValue); // agora sempre é string
 
           return values.some(term => fieldValue.toLowerCase().includes(term));
         });
       }
+    }
+
+    filtered = Processor.sortData(filtered, sortBy, (sortDirection || "ascending"))
+
+    if (typeof offset === 'number' && typeof limit === 'number') {
+      filtered = filtered.slice(offset, offset + limit);
     }
 
     return filtered;
@@ -164,9 +171,9 @@ export class AbastecimentoService {
 
   public getKpis(filters?: AbastecimentoFilters) {
     const data = this.getAbastecimentos(filters);
-    const totalGasto = data.reduce((acc, item) => acc + (item.cost || 0), 0);
-    const totalLitros = data.reduce((acc, item) => acc + (item.fuelVolume || 0), 0);
-    const totalAbastecimentos = data.length;
+    const totalCost = data.reduce((acc, item) => acc + (item.cost || 0), 0);
+    const fuelConsumed = data.reduce((acc, item) => acc + (item.fuelVolume || 0), 0);
+    const suppliesCount = data.length;
 
     // Vamos calcular veículos únicos aqui
     const uniqueVehicles = new Set(data.map(item => item.vehicle?.plate).filter(Boolean));
@@ -175,11 +182,84 @@ export class AbastecimentoService {
     const totalKilometers = data.reduce((acc, item) => acc + (item.vehicle.km || 0), 0);
 
     return {
-      totalGasto,
-      totalLitros,
-      totalAbastecimentos,
+      totalCost,
+      fuelConsumed,
+      suppliesCount,
+      dailyAverageCost: totalCost / (suppliesCount || 1),
       vehiclesCount: uniqueVehicles.size,
       kilometersDriven: totalKilometers,
+      lastUpdate: this.getLastUpdate(),
+    };
+  }
+
+  async getCharts(vehicleLimit: number = 10, filters?: AbastecimentoFilters) {
+    const data = await this.getAbastecimentos(filters);
+
+    const totalsByVehicle: Record<string, number> = {};
+    const totalsByDepartment: Record<string, number> = {};
+    const totalsByCity: Record<string, number> = {};
+    const totalsByGasStation: Record<string, number> = {};
+    const totalsByPlate: Record<string, number> = {};
+    const totalsByDate: Record<string, number> = {};
+
+    const rankingByPlateMap = new Map<string, { total: number; quantity: number }>();
+
+    for (const item of data) {
+      const vehiclePlate = item.vehicle?.plate || "N/A";
+      const department = item.department || "N/A";
+      const city = item.gasStation?.city || "N/A";
+      const gasStationName = item.gasStation?.name || "N/A";
+      const plate = item.vehicle?.plate || "N/A";
+      let dateStr = item.datetime
+      if (item.datetime) {
+        const dateObj = new Date(item.datetime);
+        if (!isNaN(dateObj.getTime())) {
+          dateStr = dateObj.toISOString().substring(0, 10);
+        }
+      }
+      const cost = item.cost || 0;
+
+      // Totais
+      totalsByVehicle[ vehiclePlate ] = (totalsByVehicle[ vehiclePlate ] || 0) + cost;
+      totalsByDepartment[ department ] = (totalsByDepartment[ department ] || 0) + cost;
+      totalsByCity[ city ] = (totalsByCity[ city ] || 0) + cost;
+      totalsByGasStation[ gasStationName ] = (totalsByGasStation[ gasStationName ] || 0) + cost;
+      totalsByPlate[ plate ] = (totalsByPlate[ plate ] || 0) + cost;
+      totalsByDate[ dateStr ] = (totalsByDate[ dateStr ] || 0) + cost;
+
+      if (plate !== "N/A") {
+        if (!rankingByPlateMap.has(plate)) rankingByPlateMap.set(plate, { total: 0, quantity: 0 });
+        const entry = rankingByPlateMap.get(plate)!;
+        entry.total += cost;
+        entry.quantity += 1;
+      }
+    }
+
+    return {
+      // Gráficos de custo
+      costByVehicle: Object.entries(totalsByVehicle)
+        .map(([ vehicle, total ]) => ({ vehicle, total }))
+        .sort((a, b) => b.total - a.total)
+        .slice(0, vehicleLimit),
+
+      costByDepartment: Object.entries(totalsByDepartment).map(([ department, total ]) => ({ department, total })),
+      costByCity: Object.entries(totalsByCity).map(([ city, total ]) => ({ city, total })),
+      costByGasStation: Object.entries(totalsByGasStation).map(([ name, total ]) => ({ name, total })),
+      costByPlate: Object.entries(totalsByPlate).map(([ plate, total ]) => ({ plate, total })),
+      costByDate: Object.entries(totalsByDate).map(([ date, total ]) => ({ date, total })),
+      costOverTime: await this.getCostOverTimeGroupedByMonth(filters),
+
+      // Rankings
+      rankingByDate: Object.entries(totalsByDate)
+        .map(([ date, total ]) => ({ date, total }))
+        .sort((a, b) => b.total - a.total),
+
+      rankingByPlate: Array.from(rankingByPlateMap, ([ plate, { total, quantity } ]) => ({ plate, total, quantity }))
+        .sort((a, b) => b.total - a.total || b.quantity - a.quantity),
+
+      rankingByDepartment: Object.entries(totalsByDepartment)
+        .map(([ department, total ]) => ({ department, total }))
+        .sort((a, b) => b.total - a.total),
     };
   }
 
@@ -226,87 +306,6 @@ export class AbastecimentoService {
     };
   }
 
-
-
-  public getGastoPorOrgao(filters?: AbastecimentoFilters) {
-    const data = this.getAbastecimentos(filters);
-    const gastosPorOrgao = data.reduce<Record<string, number>>((acc, item) => {
-      const orgao = item.department || 'N/A';
-      acc[ orgao ] = (acc[ orgao ] || 0) + (item.cost || 0);
-      return acc;
-    }, {});
-
-    return Object.entries(gastosPorOrgao)
-      .map(([ name, total ]) => ({ name, total }))
-      .sort((a, b) => b.total - a.total);
-  }
-
-  public getGastoMensal(filters?: AbastecimentoFilters) {
-    const data = this.getAbastecimentos(filters);
-    const gastosPorMes = data.reduce<Record<string, number>>((acc, item) => {
-      if (!item.datetime) return acc;
-      const date = new Date(item.datetime);
-      const mesAno = `${String(date.getUTCMonth() + 1).padStart(2, '0')}/${date.getUTCFullYear()}`;
-      acc[ mesAno ] = (acc[ mesAno ] || 0) + (item.cost || 0);
-      return acc;
-    }, {});
-
-    return Object.entries(gastosPorMes)
-      .map(([ month, total ]) => ({ month, total }))
-      .sort((a, b) => {
-        const [ m1, y1 ] = a.month.split('/');
-        const [ m2, y2 ] = b.month.split('/');
-        return new Date(`${y1}-${m1}-01`).getTime() - new Date(`${y2}-${m2}-01`).getTime();
-      });
-  }
-
-  private extractYearMonth(datetime: any): string | null {
-    if (!datetime && datetime !== 0) return null;
-    const s = String(datetime).trim();
-
-    // 1) YYYY-MM-DD ou YYYY-MM-DDTHH:MM:SS... -> pega YYYY-MM direto
-    const ymdMatch = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (ymdMatch) return `${ymdMatch[ 1 ]}-${ymdMatch[ 2 ]}`;
-
-    // 2) DD/MM/YYYY ou DD/MM/YYYY HH:MM:SS -> transforma para YYYY-MM
-    const dmyMatch = s.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
-    if (dmyMatch) {
-      const [ , dd, mm, yyyy ] = dmyMatch;
-      return `${yyyy}-${mm}`;
-    }
-
-    // 3) Fallback: tenta criar Date e extrair componentes LOCAIS (para evitar shift do toISOString)
-    const dateObj = new Date(s);
-    if (!isNaN(dateObj.getTime())) {
-      const yyyy = dateObj.getFullYear();
-      const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // getMonth é local
-      return `${yyyy}-${mm}`;
-    }
-
-    // Não foi possível extrair
-    return null;
-  }
-
-  async getCostOverTimeGroupedByMonth(filters?: any) {
-    const data: AbastecimentoProcessed[] = await this.getAbastecimentos(filters);
-
-    const totals: Record<string, number> = {};
-
-    for (const item of data) {
-      const ym = this.extractYearMonth(item.datetime);
-      if (!ym) {
-        continue;
-      }
-      totals[ ym ] = (totals[ ym ] || 0) + (Number(item.cost) || 0);
-    }
-    const monthsFound = Array.from(new Set(data.map(d => this.extractYearMonth(d.datetime)).filter(Boolean))).sort();
-
-    // ordena por YYYY-MM crescente e retorna array no formato { date: 'YYYY-MM', total }
-    return Object.entries(totals)
-      .sort(([ a ], [ b ]) => a.localeCompare(b))
-      .map(([ date, total ]) => ({ date, total }));
-  }
-
   public FilterOptions(filters: Partial<AbastecimentoOptionsFilters> = {}) {
     let filtered = this.getAbastecimentos();
 
@@ -337,6 +336,42 @@ export class AbastecimentoService {
       cidadePosto: [ ...new Set(filtered.map(item => item.gasStation?.city).filter(Boolean)) ].sort(),
       nomePosto: [ ...new Set(filtered.map(item => item.gasStation?.name).filter(Boolean)) ].sort(),
     };
+  }
+
+  async getCostOverTimeGroupedByMonth(filters?: any) {
+    const data: AbastecimentoProcessed[] = await this.getAbastecimentos(filters);
+
+    const totals: Record<string, number> = {};
+
+    for (const item of data) {
+      const ym = Processor.extractYearMonth(item.datetime);
+      if (!ym) {
+        continue;
+      }
+      totals[ ym ] = (totals[ ym ] || 0) + (Number(item.cost) || 0);
+    }
+
+    // ordena por YYYY-MM crescente e retorna array no formato { date: 'YYYY-MM', total }
+    return Object.entries(totals)
+      .sort(([ a ], [ b ]) => a.localeCompare(b))
+      .map(([ date, total ]) => ({ date, total }));
+  }
+
+  getColumns() {
+    return [
+      { header: "Data", accessor: "datetime", sortable: true, dataType: "date", isFilterable: true, filterKey: "datetime" },
+      { header: "Custo", accessor: "cost", sortable: true, dataType: "currency", isFilterable: true, filterKey: "cost" },
+      { header: "Litros", accessor: "fuelVolume", sortable: true, dataType: "number", isFilterable: true, filterKey: "fuelVolume" },
+      { header: "Tipo Combustível", accessor: "fuelType", sortable: true, dataType: "string", isFilterable: true, filterKey: "fuelType" },
+      { header: "Motorista", accessor: "driverName", sortable: true, dataType: "string", isFilterable: true, filterKey: "driverName" },
+      { header: "Placa", accessor: "vehicle.plate", sortable: true, dataType: "string", isFilterable: true, filterKey: "vehiclePlate" },
+      { header: "Modelo", accessor: "vehicle.model", sortable: true, dataType: "string", isFilterable: true, filterKey: "vehicleModel" },
+      { header: "Marca", accessor: "vehicle.brand", sortable: true, dataType: "string", isFilterable: true, filterKey: "vehicleBrand" },
+      { header: "Posto", accessor: "gasStation.name", sortable: true, dataType: "string", isFilterable: true, filterKey: "gasStationName" },
+      { header: "Cidade", accessor: "gasStation.city", sortable: true, dataType: "string", isFilterable: true, filterKey: "gasStationCity" },
+      { header: "Órgão/Departamento", accessor: "department", sortable: true, dataType: "string", isFilterable: true, filterKey: "department" },
+      // { header: "Centro de Custo", accessor: "costCenter", sortable: true, dataType: "string", isFilterable: true, filterKey: "costCenter" },
+    ];
   }
 
 }
