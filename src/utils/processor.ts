@@ -92,35 +92,35 @@ export const Processor = {
   // ----------- Datas -----------
 
   // yyyy/mm/dd(T)hh:mm:ss => dd/mm/yyyy hh:mm:ss
-  parseDate(dateInput?: string | null): Date | null {
-    if (!dateInput) return null;
+  parseDate(dateInput?: string): Date | string {
+    if (!dateInput) return "N/A";
 
     const date = new Date(dateInput);
     if (!isNaN(date.getTime())) return date;
 
     const normalized = dateInput.replace(' ', 'T');
     const fallback = new Date(normalized);
-    return isNaN(fallback.getTime()) ? null : fallback;
+    return isNaN(fallback.getTime()) ? "N/A" : fallback;
   },
 
   // dd/mm/yyyy => dd/mm/yyyy hh:mm:ss
-  parseDateDMY(dateInput?: string | null): Date | null {
-    if (!dateInput) return null;
+  parseDateDMY(dateInput?: string): Date | string {
+    if (!dateInput) return "N/A";
     const parts = dateInput.split('/');
-    if (parts.length !== 3) return null;
+    if (parts.length !== 3) return "N/A";
 
     const [ day, month, year ] = parts.map((p) => parseInt(p, 10));
-    if ([ day, month, year ].some((n) => isNaN(n))) return null;
+    if ([ day, month, year ].some((n) => isNaN(n))) return "N/A";
 
     const date = new Date(Date.UTC(year, month - 1, day));
-    return isNaN(date.getTime()) ? null : date;
+    return isNaN(date.getTime()) ? "N/A" : date;
   },
 
   // yyyy/mm/dd(T)hh:mm:ss ou yyyy/mm/dd => yyyy/mm/dd
-  formatDateISO(dateInput?: string | null): string | null {
-    if (!dateInput) return null;
+  formatDateISO(dateInput?: string): string {
+    if (!dateInput) return "N/A";
     const date = new Date(dateInput);
-    if (isNaN(date.getTime())) return null;
+    if (isNaN(date.getTime())) return "N/A";
 
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
@@ -129,10 +129,10 @@ export const Processor = {
   },
 
   // yyyy/mm/dd hh:mm:ss ou yyyy/mm/dd => dd/mm/yyyy
-  formatDatePTBR(dateInput?: string | null): string | null {
-    if (!dateInput) return null;
+  formatDatePTBR(dateInput?: string): string {
+    if (!dateInput) return "N/A";
     const date = new Date(dateInput);
-    if (isNaN(date.getTime())) return null;
+    if (isNaN(date.getTime())) return "N/A";
 
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');

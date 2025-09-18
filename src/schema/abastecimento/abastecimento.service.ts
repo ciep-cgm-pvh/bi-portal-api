@@ -214,7 +214,7 @@ export class AbastecimentoService {
       if (item.datetime) {
         const dateObj = new Date(item.datetime);
         if (!isNaN(dateObj.getTime())) {
-          dateStr = dateObj.toISOString().substring(0, 10);
+          dateStr = Processor.formatDatePTBR(item.datetime);
         }
       }
       const cost = item.cost || 0;
