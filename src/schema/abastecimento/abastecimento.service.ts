@@ -77,7 +77,6 @@ export class AbastecimentoService {
     let filtered = this.getAbastecimentos(filters);
     if (!tableFilters) return filtered;
 
-
     
     if (tableFilters.datetime) {
       const search = tableFilters.datetime.toLowerCase();
@@ -143,6 +142,11 @@ export class AbastecimentoService {
     }
 
     return filtered;
+  }
+
+  public getTableCount(filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): number {
+    const data = this.getAbastecimentosTable(undefined, undefined, undefined, undefined, filters, tableFilters);
+    return data.length;
   }
 
   public getLastUpdate() {
@@ -309,6 +313,21 @@ export class AbastecimentoService {
   public FilterOptions(filters: Partial<AbastecimentoOptionsFilters> = {}) {
     let filtered = this.getAbastecimentos();
 
+    if (filters.dateRange?.from) {
+      const fromDate = new Date(filters.dateRange.from);
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.datetime);
+        return itemDate !== null && itemDate >= fromDate;
+      });
+    }
+    if (filters.dateRange?.to) {
+      const toDate = new Date(filters.dateRange.to);
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.datetime);
+        return itemDate !== null && itemDate <= toDate;
+      });
+    }
+    
     if (filters.department) {
       filtered = filtered.filter(item => item.department === filters.department);
     }

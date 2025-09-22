@@ -19,6 +19,7 @@ input AbastecimentoFiltersInput {
 }
 
 input AbastecimentoFiltersOptionsInput {
+  dateRange: DateRangeInput
   fuelType: String
   vehiclePlate: String
   department: String
