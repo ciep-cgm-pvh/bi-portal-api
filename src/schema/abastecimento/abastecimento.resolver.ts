@@ -17,8 +17,7 @@ const abastecimentoResolvers = () => ({
 
     // count baseado no mesmo conjunto filtrado da tabela
     getAbastecimentosTableCount: (_: unknown, { filters, tableFilters }: any) => {
-      const data = abastecimentoService.getAbastecimentosTable(filters, tableFilters);
-      return data.length;
+      return abastecimentoService.getTableCount(filters, tableFilters);
     },
 
     // KPIs
