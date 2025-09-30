@@ -3,6 +3,7 @@ import { ManutencaoProcessor } from './manutencaoProcessor';
 import { loadManutencao } from '../../data/loadManutencao';
 import { mapToProcessed } from './utils/mapToProcessed';
 import { ManutencaoFilters, ManutencaoProcessed, ManutencaoTableFilters } from './utils/types';
+import { Processor } from '../../utils/processor';
 
 export class ManutencaoService {
   private rawData: any;
@@ -36,7 +37,7 @@ export class ManutencaoService {
     const finalSortDirection = (sortDirection || "ascending").toString();
 
     // Ordena
-    filtered = ManutencaoProcessor.sortData(filtered, finalSortBy, finalSortDirection as any);
+    filtered = Processor.sortData(filtered, finalSortBy, finalSortDirection as any);
 
     // Converte limit/offset para números válidos
     const l = Number(limit);

@@ -1,5 +1,6 @@
 import { loadDiarias } from '../../data/loadDiarias';
 import { Processor } from '../../utils/processor';
+import { DiariasProcessor } from './diariasProcessor';
 import { mapToProcessed } from './utils/mapToProcessed';
 import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './utils/types';
 
@@ -13,7 +14,7 @@ export class DiariasService {
   }
 
   public getDiariasData(filters?: DiariasFilters): DiariaProcessed[] {
-    let filtered = Processor.applyFilters(this.processedData, filters)
+    let filtered = DiariasProcessor.applyFilters(this.processedData, filters)
     return filtered
   }
 
@@ -25,7 +26,7 @@ export class DiariasService {
       filters?: DiariasFilters,
       tableFilters?: DiariasTableFilters) {
       // pega dados já filtrados pelo getManutencao (dateRange + filtros gerais)
-      let filtered = Processor.applyFilters(this.getDiariasData(filters), filters, tableFilters);
+      let filtered = DiariasProcessor.applyFilters(this.getDiariasData(filters), filters, tableFilters);
     
     filtered = Processor.sortData(filtered, sortBy, (sortDirection || "ascending"))
 
@@ -37,7 +38,7 @@ export class DiariasService {
   }
 
   public getTableCount(filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
-      return Processor.applyFilters(this.processedData, filters, tableFilters).length;
+      return DiariasProcessor.applyFilters(this.processedData, filters, tableFilters).length;
   }
 
   public getKpi(filters?: DiariasFilters) {

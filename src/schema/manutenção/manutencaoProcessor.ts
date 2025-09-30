@@ -2,14 +2,6 @@
 import { ManutencaoFilters, ManutencaoProcessed, ManutencaoTableFilters, ProcessedManutencaoRow } from './utils/types';
 
 export const ManutencaoProcessor = {
-  // Função utilitária para normalizar valores vazios
-  normalizeField(value: any): string {
-    if (value === undefined || value === null || value === "") {
-      return "N/A";
-    }
-    return String(value).trim().toLowerCase();
-  },
-
   parseDate(dateInput?: string | null): Date | null {
     if (!dateInput) return null;
 
@@ -29,19 +21,6 @@ export const ManutencaoProcessor = {
     return null;
   },
 
-  //Recebe uma data com milissegundos e retorna no formato yyyy-mm-dd hh:mm:ss
-  formatDateISO(dateInput?: string | null): string | null {
-    if (!dateInput) return null;
-    const date = new Date(dateInput);
-    if (isNaN(date.getTime())) return null;
-
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
-    const dd = String(date.getDate()).padStart(2, '0');
-
-    return `${yyyy}-${mm}-${dd}`;
-  },
-
   formatDatePTBR(dateInput?: string | null): string | null {
     if (!dateInput) return null;
     const date = new Date(dateInput);
@@ -52,43 +31,6 @@ export const ManutencaoProcessor = {
     const dd = String(date.getDate()).padStart(2, '0');
 
     return `${dd}/${mm}/${yyyy}`;
-  },
-
-  // Converte uma string ou array de strings em array de strings
-  toArray(v: string | string[] | undefined): string[] {
-    if (!v) return [];
-    return Array.isArray(v) ? v : [ v ];
-  },
-
-  // Função de ordenação genérica
-  sortData<T extends Record<string, any>>(
-    data: T[],
-    sortBy?: string,
-    sortDirection: 'ascending' | 'descending' = 'ascending'
-  ): T[] {
-    if (!sortBy) return data;
-
-    const direction = sortDirection.toLowerCase() === 'descending' ? -1 : 1;
-
-    return [ ...data ].sort((a, b) => {
-      let av: any = a[ sortBy ];
-      let bv: any = b[ sortBy ];
-
-      // converte strings numéricas em números para ordenação correta
-      const aNum = av != null && !isNaN(Number(av)) ? Number(av) : av;
-      const bNum = bv != null && !isNaN(Number(bv)) ? Number(bv) : bv;
-
-      av = aNum;
-      bv = bNum;
-
-      if (av == null && bv == null) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
-
-      if (av < bv) return -1 * direction;
-      if (av > bv) return 1 * direction;
-      return 0;
-    });
   },
 
   applyFilters(

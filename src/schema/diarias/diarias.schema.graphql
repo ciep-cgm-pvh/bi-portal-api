@@ -76,6 +76,7 @@ type DiariaTable {
   employee: String
   paymentDate: String
   processNumber: String
+  approvedDate: String
 }
 
 type FilterOption {
