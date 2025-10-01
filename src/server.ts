@@ -10,42 +10,59 @@ import { buildSchema } from './schema/index';
 dotenv.config();
 
 export async function buildServer() {
-  const app = Fastify();
-
-  const allowedOrigins = (process.env.FRONTEND_URLS || '').split(',');
-  const isDev = process.env.NODE_ENV !== 'production';
-
-  app.register(cors, {
-    origin: isDev ? [ "http://localhost:5173", allowedOrigins ] : allowedOrigins,
+  const app = Fastify({
+    logger: process.env.NODE_ENV === 'production' ? false : true,
+    trustProxy: true, // Importante para Vercel
   });
 
-  await app.register(fastifyRateLimit, {
-    max: 50,       // Máx. requisições
-    timeWindow: "1 minute", // Janela de tempo
-    errorResponseBuilder: (req, context) => {
-      return {
-        code: "TOO_MANY_REQUESTS",
-        message: `Você fez muitas requisições. Tente novamente em ${context.after}`,
-      };
-    },
-  })
+  const allowedOrigins = (process.env.FRONTEND_URLS || '').split(',').filter(Boolean);
+  const isDev = process.env.NODE_ENV !== 'production';
+
+  // CORS
+  await app.register(cors, {
+    origin: isDev
+      ? [ "http://localhost:5173", ...allowedOrigins ]
+      : allowedOrigins.length > 0
+        ? allowedOrigins
+        : true, // Aceita qualquer origem se não houver FRONTEND_URLS configurado
+    credentials: true,
+  });
+
+  // Rate Limit (pode dar problema no serverless, considere desabilitar)
+  if (!process.env.VERCEL) {
+    await app.register(fastifyRateLimit, {
+      max: 50,
+      timeWindow: "1 minute",
+      errorResponseBuilder: (req, context) => {
+        return {
+          code: "TOO_MANY_REQUESTS",
+          message: `Você fez muitas requisições. Tente novamente em ${context.after}`,
+        };
+      },
+    });
+  }
 
   // ROTA DEFAULT
   app.get('/', async (request, reply) => {
-    return { message: 'API is running' };
+    return {
+      message: 'API is running',
+      graphql: isDev ? '/graphiql' : '/graphql',
+      version: '1.0.0'
+    };
   });
 
-  const schema = await buildSchema(app); // <-- chama a função com `app`
+  const schema = await buildSchema(app);
 
+  // Helmet
   await app.register(fastifyHelmet, {
     contentSecurityPolicy: isDev
       ? false
       : {
         directives: {
           defaultSrc: [ "'self'" ],
-          scriptSrc: [ "'self'" ],
-          styleSrc: [ "'self'" ],
-          imgSrc: [ "'self'" ],
+          scriptSrc: [ "'self'", "'unsafe-inline'", "'unsafe-eval'" ], // GraphiQL precisa disso
+          styleSrc: [ "'self'", "'unsafe-inline'" ],
+          imgSrc: [ "'self'", "data:", "https:" ],
           fontSrc: [ "'self'" ],
           objectSrc: [ "'none'" ],
           frameAncestors: [ "'self'" ],
@@ -54,10 +71,12 @@ export async function buildServer() {
       },
   });
 
-  app.register(mercurius, {
+  // Mercurius (GraphQL)
+  await app.register(mercurius, {
     schema,
-    context: () => ({}), // contexto vazio, você pode adicionar o Prisma aqui se necessário
-    graphiql: isDev, // habilita o GraphiQL apenas em desenvolvimento
+    context: () => ({}),
+    graphiql: true, // Habilita sempre (ou use isDev se preferir)
+    path: '/graphql', // Define o path explicitamente
   });
 
   return app;
