@@ -24,7 +24,7 @@ const mapPrismaToGraphQL = (item: any) => ({
   },
 });
 
-const abastecimentoResolver = {
+const abastecimentoResolver = () => ({
   Query: {
     getAbastecimentosTable: async (_: unknown, args: any) => {
       console.time('Execution Time: getAbastecimentosTable');
@@ -77,6 +77,6 @@ const abastecimentoResolver = {
       ];
     },
   },
-};
+});
 
 export default abastecimentoResolver;
