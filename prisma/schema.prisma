@@ -7,7 +7,7 @@ generator client {
 datasource db {
   provider = "sqlite"
   // O caminho agora aponta para uma variável de ambiente
-  url      = env("DATABASE_URL")
+  url      = "file:./data/portal-abastecimento.db"
 }
 
 // Modelo 'Abastecimento' sincronizado com o bi-portal-data
