@@ -1,11 +1,11 @@
 // src/server.ts
+import cors from '@fastify/cors';
+import fastifyHelmet from '@fastify/helmet';
+import fastifyRateLimit from '@fastify/rate-limit';
+import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import mercurius from 'mercurius';
 import { buildSchema } from './schema/index';
-import cors from '@fastify/cors';
-import fastifyHelmet from '@fastify/helmet';
-import dotenv from 'dotenv';
-import fastifyRateLimit from '@fastify/rate-limit';
 
 dotenv.config();
 
@@ -16,7 +16,7 @@ export async function buildServer() {
   const isDev = process.env.NODE_ENV !== 'production';
 
   app.register(cors, {
-    origin: isDev ? ["http://localhost:5173", allowedOrigins] : allowedOrigins,
+    origin: isDev ? [ "http://localhost:5173", allowedOrigins ] : allowedOrigins,
   });
 
   await app.register(fastifyRateLimit, {
@@ -29,7 +29,12 @@ export async function buildServer() {
       };
     },
   })
-  
+
+  // ROTA DEFAULT
+  app.get('/', async (request, reply) => {
+    return { message: 'API is running' };
+  });
+
   const schema = await buildSchema(app); // <-- chama a função com `app`
 
   await app.register(fastifyHelmet, {
