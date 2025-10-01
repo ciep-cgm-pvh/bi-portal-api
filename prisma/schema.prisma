@@ -6,31 +6,31 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  // O caminho agora aponta para o arquivo dentro da pasta do submódulo
-  url      = "file:./db/data/portal-abastecimento.db"
+  // O caminho agora aponta para uma variável de ambiente
+  url      = env("DATABASE_URL")
 }
 
-// Cole aqui o mesmo model 'Abastecimento' que você criou no bi-portal-data
+// Modelo 'Abastecimento' sincronizado com o bi-portal-data
 model Abastecimento {
   id            Int      @id @default(autoincrement())
   datetime      DateTime
   km            Int?
-  litros        Float
-  valorTotal    Float
+  fuelVolume    Float
+  cost          Float
   valorUnitario Float?
-  combustivel   String
-  placa         String
-  modelo        String
-  marca         String
+  fuelType      String
+  vehiclePlate  String
+  vehicleModel  String
+  vehicleBrand  String
   ano           String?
-  condutor      String
-  departamento  String
-  centroDeCusto String?
-  postoNome     String
-  postoCidade   String
+  driverName    String
+  department    String
+  costCenter    String?
+  gasStationName String
+  gasStationCity String
 
   @@index([datetime])
-  @@index([placa])
-  @@index([departamento])
-  @@index([postoCidade])
+  @@index([vehiclePlate])
+  @@index([department])
+  @@index([gasStationCity])
 }
