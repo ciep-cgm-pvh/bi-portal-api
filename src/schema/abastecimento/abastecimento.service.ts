@@ -15,12 +15,12 @@ const buildWhereClause = (filters?: AbastecimentoFilters, tableFilters?: Abastec
     };
   }
   if (filters?.department) where.department = { contains: filters.department };
-  if (filters?.fuelType) where.fuelType = { 
-    contains: filters.fuelType 
+  if (filters?.fuelType) where.fuelType = {
+    contains: filters.fuelType
   };
   if (filters?.vehiclePlate) where.vehiclePlate = { contains: filters.vehiclePlate };
-  if (filters?.driverName) where.driverName = { 
-    contains: filters.driverName 
+  if (filters?.driverName) where.driverName = {
+    contains: filters.driverName
   };
 
   // Filtros específicos da Tabela (geralmente buscas parciais)
@@ -33,6 +33,27 @@ const buildWhereClause = (filters?: AbastecimentoFilters, tableFilters?: Abastec
   return where;
 };
 
+// Tipos para os resultados do groupBy
+interface GroupByDepartment {
+  department: string;
+  _sum: {
+    cost: number | null;
+  };
+}
+
+interface GroupByCity {
+  gasStationCity: string;
+  _sum: {
+    cost: number | null;
+  };
+}
+
+interface GroupByPlate {
+  vehiclePlate: string;
+  _sum: {
+    cost: number | null;
+  };
+}
 
 export class AbastecimentoService {
 
@@ -136,9 +157,18 @@ export class AbastecimentoService {
     });
 
     return {
-      costByDepartment: costByDepartment.map(d => ({ department: d.department, total: d._sum.cost || 0 })),
-      costByCity: costByCity.map(c => ({ city: c.gasStationCity, total: c._sum.cost || 0 })),
-      costByPlate: costByPlate.map(p => ({ plate: p.vehiclePlate, total: p._sum.cost || 0 })),
+      costByDepartment: costByDepartment.map((d: GroupByDepartment) => ({
+        department: d.department,
+        total: d._sum.cost || 0
+      })),
+      costByCity: costByCity.map((c: GroupByCity) => ({
+        city: c.gasStationCity,
+        total: c._sum.cost || 0
+      })),
+      costByPlate: costByPlate.map((p: GroupByPlate) => ({
+        plate: p.vehiclePlate,
+        total: p._sum.cost || 0
+      })),
       // Outros gráficos podem ser implementados de forma similar
       costByVehicle: [],
       costByGasStation: [],
