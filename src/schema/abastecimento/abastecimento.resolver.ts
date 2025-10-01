@@ -26,6 +26,13 @@ const mapPrismaToGraphQL = (item: any) => ({
 
 const abastecimentoResolver = () => ({
   Query: {
+    getAbastecimentos: async (_: unknown, { filters }: { filters?: AbastecimentoFilters }) => {
+      console.time('Execution Time: getAbastecimentos');
+      const data = await abastecimentoService.getAbastecimentos(filters);
+      console.timeEnd('Execution Time: getAbastecimentos');
+      return data.map(mapPrismaToGraphQL);
+    },
+    
     getAbastecimentosTable: async (_: unknown, args: any) => {
       console.time('Execution Time: getAbastecimentosTable');
       const data = await abastecimentoService.getAbastecimentosTable(args.limit, args.offset, args.sortBy, args.sortDirection, args.filters, args.tableFilters);

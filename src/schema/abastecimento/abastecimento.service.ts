@@ -56,7 +56,10 @@ interface GroupByPlate {
 }
 
 export class AbastecimentoService {
-
+  async getAbastecimentos(filters?: AbastecimentoFilters) {
+    const where = buildWhereClause(filters);
+    return prisma.abastecimento.findMany({ where });
+  }
   // Retorna dados para a tabela com paginação, ordenação e filtros
   async getAbastecimentosTable(limit?: number, offset?: number, sortBy?: string, sortDirection?: string, filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters) {
     const where = buildWhereClause(filters, tableFilters);
