@@ -5,15 +5,14 @@
       "src": "api/index.ts",
       "use": "@vercel/node",
       "config": {
-        "maxLambdaSize": "50mb",
-        "includeFiles": "public/data/**"
+        "includeFiles": ["public/data/**", "prisma/**", "src/schema/**/*.graphql", "data/**"]
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api"
+      "dest": "src/index.ts"
     }
   ]
 }

@@ -12,4 +12,3 @@ buildServer().then((app) => {
     console.log(`🚀 Server ready at http://localhost:${PORT}/graphiql`)
   })
 })
-
