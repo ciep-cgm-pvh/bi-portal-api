@@ -1,5 +1,9 @@
-import { Processor } from '../../../utils/processor';
 import { DiariaProcessed } from './types';
+
+function getDiariaStatus(row: any): string {
+  return "Indefinido"
+}
+
 
 export function mapToProcessed(rows: Record<string, any>[]): DiariaProcessed[] {
   return rows.map(row => {
@@ -26,6 +30,7 @@ export function mapToProcessed(rows: Record<string, any>[]): DiariaProcessed[] {
       amountCanceled: (row[ "Valor Cancelado" ]),
       amountGranted: (row[ "Valor Concedido" ]),
       balance: (row[ "Saldo" ]),
+      status: getDiariaStatus(row),
     };
   });
 }

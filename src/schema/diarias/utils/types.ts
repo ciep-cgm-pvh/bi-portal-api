@@ -46,6 +46,7 @@ export interface DiariaProcessed {
   amountCanceled: string | number;
   amountGranted: string | number;
   balance: string | number;
+  status: string
 }
 
 export interface DiariasFilters {
@@ -53,12 +54,13 @@ export interface DiariasFilters {
   department: string
   status: string
   processNumber: string
-  paymentDate: string
 }
 
 export interface DiariasTableFilters {
-  datetime: string
+  processNumber: string
   department: string
+  paymentDate: string
   employee: string
+  amountGranted: string
   status: string
 }

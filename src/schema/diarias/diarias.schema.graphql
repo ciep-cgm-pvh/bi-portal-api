@@ -8,15 +8,23 @@ input DateRangeInput {
 # Define o tipo para os filtros que podemos receber
 input DiariasFilters {
   dateRange: DateRangeInput
-  department: [String!]
+  department: String!
   status: String!
-  process: String
+  paymentDate: String
+}
+
+input DiariasFiltersOptions {
+  dateRange: DateRangeInput
+  department: String!
+  status: String!
   paymentDate: String
 }
 
 input DiariasTableFilters {
-  datetime: String
+  paymentDate: String
+  amountGranted: String
   department: String
+  processNumber: String
   employee: String
   status: String
 }
@@ -88,7 +96,6 @@ type FilterOptionsDiaria {
   department: [FilterOption!]
   status: [FilterOption!]
   processNumber: [FilterOption!]
-  paymentDate: [FilterOption!]
 }
 
 # A Query principal
@@ -111,5 +118,5 @@ type Query {
   getDiariasLastUpdate: String!
   getDiariasKpi(filters: DiariasFilters): KpiData!
   getDiariasCharts(filters: DiariasFilters): DiariasCharts!
-  getDiariasFiltersOptions(filters: DiariasFilters): FilterOptionsDiaria!
+  getDiariasFiltersOptions(filters: DiariasFiltersOptions): FilterOptionsDiaria!
 }
