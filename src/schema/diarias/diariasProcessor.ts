@@ -4,6 +4,15 @@ import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './utils/ty
 export const DiariasProcessor = {
   applyFilters(data: DiariaProcessed[], filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
     let filtered = [ ...data ];
+    
+    filtered = filtered.filter(item => {
+      const hasCancelamento = Number(item.amountCanceled || 0) > 0;
+      const hasDataCancelada = item.canceledDate && item.canceledDate.trim() !== '';
+      const hasInadimplencia = item.defaultDate != null && item.defaultDate.trim() !== '';
+
+      // remove a linha se algum desses existir
+      return !(hasCancelamento || hasDataCancelada || hasInadimplencia);
+    });
 
     if (!filters) return filtered;
 
