@@ -10,14 +10,14 @@ input DiariasFilters {
   dateRange: DateRangeInput
   department: String!
   status: String!
-  paymentDate: String
+  processNumber: String
 }
 
 input DiariasFiltersOptions {
   dateRange: DateRangeInput
   department: String!
   status: String!
-  paymentDate: String
+  processNumber: String
 }
 
 input DiariasTableFilters {

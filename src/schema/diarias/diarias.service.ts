@@ -105,6 +105,22 @@ export class DiariasService {
 
     // 1. Filtra dados com base em TODOS os filtros ativos
     let filtered = allData;
+
+    if (filters?.dateRange?.from) {
+      const fromDate = new Date(filters.dateRange.from);
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.paymentDate);
+        return itemDate !== null && itemDate >= fromDate;
+      });
+    }
+    if (filters?.dateRange?.to) {
+      const toDate = new Date(filters.dateRange.to);
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.paymentDate);
+        return itemDate !== null && itemDate <= toDate;
+      });
+    }
+
     if (filters?.department) {
       const departments = Array.isArray(filters.department)
         ? filters.department.map(d => String(d).toLowerCase())
