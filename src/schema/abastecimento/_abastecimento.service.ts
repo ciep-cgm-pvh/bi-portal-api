@@ -1,23 +1,41 @@
-// // AbastecimentoService.ts
+// // AbastecimentoService.ts ANTIGO
 // import { AbastecimentoProcessed, AbastecimentoFilters, AbastecimentoTableFilters, AbastecimentoOptionsFilters } from './utils/types';
-// import { loadAbastecimento } from '../../data/loadAbastecimento';
 // import { mapToProcessed } from './utils/mapToProcessed';
 // import { AbastecimentoProcessor } from './abastecimentoProcessor';
 // import { Processor } from '../../utils/processor';
+// import { getAbastecimentoData } from '../../data/loadAbastecimento';
+
 
 // export class AbastecimentoService {
 //   private rawData: any[];
 //   private processedData: AbastecimentoProcessed[];
 
-//   constructor() {
-//     this.rawData = loadAbastecimento();
+//   constructor(rawData: any[]) {
+//     this.rawData = rawData;
 //     this.processedData = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(this.rawData));
+//   }
+
+//   static async create(): Promise<AbastecimentoService> {
+//     const rawData = await getAbastecimentoData("all");
+//     return new AbastecimentoService(rawData);
+//   }
+
+//   public getRawData() {
+//     return this.rawData;
 //   }
 
 //   public getAbastecimentos(filters?: AbastecimentoFilters): AbastecimentoProcessed[] {
 //     let filtered = this.processedData;
 
 //     if (!filters) return filtered;
+
+//     // Filtro opcional para excluir veículos com "posto interno" no modelo
+//     if (filters.excludePostoInterno) {
+//       filtered = filtered.filter(item => {
+//         const model = (item.vehicle?.model ?? '').toLowerCase();
+//         return !model.includes('posto interno');
+//       });
+//     }
 
 //     // Filtro por data --- NAO REMOVER ---
 //     if (filters.dateRange) {
@@ -26,11 +44,11 @@
 
 //       filtered = filtered.filter(item => {
 //         if (!item.datetime) return false;
-//         const dt = Processor.parseDateDMY(item.datetime);
-//         if (!dt) return false;
+//         const dt = new Date(item.datetime); // sem parse DMY
 //         return dt >= from && dt <= to;
 //       });
 //     }
+
 
 //     // Filtro por departamento
 //     if (filters.department) {
@@ -62,25 +80,17 @@
 //       filtered = filtered.filter(item => item.gasStation?.name.toLowerCase().includes(val));
 //     }
 
-//     // Filtro opcional para excluir veículos com "posto interno" no modelo
-//     if (filters.excludePostoInterno) {
-//       filtered = filtered.filter(item => {
-//         const model = (item.vehicle?.model ?? '').toLowerCase();
-//         return !model.includes('posto interno');
-//       });
-//     }
-
 //     return filtered;
 //   }
 
 //   public getAbastecimentosTable(limit?: number, offset?: number, sortBy?: string, sortDirection?: any, filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): AbastecimentoProcessed[] {
 //     let filtered = this.getAbastecimentos(filters);
-//     if (!tableFilters) return filtered;
 
+//     if (!tableFilters) return filtered;
     
 //     if (tableFilters.datetime) {
 //       const search = tableFilters.datetime.toLowerCase();
-//       filtered = filtered.filter(item => item.datetime?.toLowerCase().includes(search));
+//       filtered = filtered.filter(item => item.datetime?.includes(search));
 //     }
   
 //     // --- Numeric Filters (busca parcial) ---
@@ -154,28 +164,50 @@
 //       .map(item => item.datetime)
 //       .filter(Boolean)
 //       .map((dateStr: string) => {
-//         // Pega apenas a parte da data antes do espaço
-//         const [ datePart ] = dateStr.split(" "); // "31/07/2025"
-//         const [ day, month, year ] = datePart.split("/").map(Number);
-//         return new Date(year, month - 1, day);
+//         // Pega só a parte da data antes do espaço
+//         const [ datePart ] = dateStr.split(" "); // ex: "2023-11-23"
+
+//         let day: number | null = null;
+//         let month: number | null = null;
+//         let year: number | null = null;
+
+//         if (datePart.includes("-")) {
+//           // Formato YYYY-MM-DD
+//           [ year, month, day ] = datePart.split("-").map(Number);
+//         } else if (datePart.includes("/")) {
+//           // Formato DD/MM/YYYY
+//           [ day, month, year ] = datePart.split("/").map(Number);
+//         }
+
+//         if (day && month && year) {
+//           return new Date(year, month - 1, day);
+//         }
+
+//         return null;
 //       })
-//       .filter((date: Date) => !isNaN(date.getTime()));
+//       .filter((date: Date | null): date is Date => date !== null && !isNaN(date.getTime()));
 
 //     if (dates.length === 0) return null;
 
 //     const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
 
-//     // Retorna só no formato DD/MM/YYYY
+//     // Retorna no formato DD/MM/YYYY
 //     const day = String(latestDate.getDate()).padStart(2, "0");
 //     const month = String(latestDate.getMonth() + 1).padStart(2, "0");
 //     const year = latestDate.getFullYear();
 
-//     return `${year}-${month}-${day}`;
+//     return `${day}/${month}/${year}`;
 //   }
+
 
 //   public getKpis(filters?: AbastecimentoFilters) {
 //     const data = this.getAbastecimentos(filters);
-//     const totalCost = data.reduce((acc, item) => acc + (item.cost || 0), 0);
+    
+//     const totalCost = data.reduce((acc, item) => {
+//       const value = typeof item.cost === "number" ? item.cost : Number(item.cost) || 0;
+//       return acc + (isFinite(value) ? value : 0);
+//     }, 0);
+
 //     const fuelConsumed = data.reduce((acc, item) => acc + (item.fuelVolume || 0), 0);
 //     const suppliesCount = data.length;
 
@@ -183,7 +215,7 @@
 //     const uniqueVehicles = new Set(data.map(item => item.vehicle?.plate).filter(Boolean));
 
 //     // Se tiver campo para quilômetros rodados, soma aqui (exemplo: item.kilometers)
-//     const totalKilometers = data.reduce((acc, item) => acc + (item.vehicle.km || 0), 0);
+//     const totalKilometers = data.reduce((acc, item) => acc + (Number(item.vehicle.kmRodado) || 0), 0);
 
 //     return {
 //       totalCost,
@@ -389,7 +421,6 @@
 //       { header: "Posto", accessor: "gasStation.name", sortable: true, dataType: "string", isFilterable: true, filterKey: "gasStationName" },
 //       { header: "Cidade", accessor: "gasStation.city", sortable: true, dataType: "string", isFilterable: true, filterKey: "gasStationCity" },
 //       { header: "Órgão/Departamento", accessor: "department", sortable: true, dataType: "string", isFilterable: true, filterKey: "department" },
-//       // { header: "Centro de Custo", accessor: "costCenter", sortable: true, dataType: "string", isFilterable: true, filterKey: "costCenter" },
 //     ];
 //   }
 

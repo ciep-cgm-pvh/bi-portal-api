@@ -25,7 +25,6 @@ model Abastecimento {
   ano           String?
   driverName    String
   department    String
-  costCenter    String?
   gasStationName String
   gasStationCity String
 

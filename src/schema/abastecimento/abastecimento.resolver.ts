@@ -1,89 +1,120 @@
+// abastecimento.resolver.ts
 import { AbastecimentoService } from './abastecimento.service';
 import { AbastecimentoFilters, AbastecimentoOptionsFilters } from './utils/types';
 
-const abastecimentoService = new AbastecimentoService();
 
-// Mapeia o resultado do Prisma para o formato aninhado do GraphQL
-const mapPrismaToGraphQL = (item: any) => ({
-  id: item.id,
-  datetime: item.datetime,
-  cost: item.cost,
-  fuelVolume: item.fuelVolume,
-  fuelType: item.fuelType,
-  driverName: item.driverName,
-  department: item.department,
-  costCenter: item.costCenter,
-  vehicle: {
-    plate: item.vehiclePlate,
-    model: item.vehicleModel,
-    brand: item.vehicleBrand,
-  },
-  gasStation: {
-    name: item.gasStationName,
-    city: item.gasStationCity,
-  },
-});
+let abastecimentoService: AbastecimentoService | null = null;
 
-const abastecimentoResolver = () => ({
+// inicialização assíncrona logo na carga do módulo
+(async () => {
+  abastecimentoService = await AbastecimentoService.create();
+  console.log("🚀 AbastecimentoService inicializado!");
+})();
+
+export const abastecimentoResolvers = {
   Query: {
+    abastecimentoRawData: async () => {
+      try {
+        if (!abastecimentoService) {
+          console.error("❌ AbastecimentoService ainda não inicializado!");
+          throw new Error("AbastecimentoService ainda não inicializado");
+        }
+        const data = await abastecimentoService.getRawData();
+        return data;
+      } catch (error) {
+        console.error("❌ Erro em abastecimentoRawData:", error);
+        throw new Error("Erro ao carregar dados brutos de abastecimento.");
+      }
+    },
+
+    // Dados gerais (filtros gerais, incluindo dateRange)
     getAbastecimentos: async (_: unknown, { filters }: { filters?: AbastecimentoFilters }) => {
-      console.time('Execution Time: getAbastecimentos');
-      const data = await abastecimentoService.getAbastecimentos(filters);
-      console.timeEnd('Execution Time: getAbastecimentos');
-      return data.map(mapPrismaToGraphQL);
+      try {
+        if (!abastecimentoService) throw new Error("AbastecimentoService ainda não inicializado");
+        return await abastecimentoService.getAbastecimentos(filters);
+      } catch (error) {
+        console.error("❌ Erro em getAbastecimentos:", error);
+        throw new Error("Erro ao buscar abastecimentos.");
+      }
     },
-    
+
     getAbastecimentosTable: async (_: unknown, args: any) => {
-      console.time('Execution Time: getAbastecimentosTable');
-      const data = await abastecimentoService.getAbastecimentosTable(args.limit, args.offset, args.sortBy, args.sortDirection, args.filters, args.tableFilters);
-      console.timeEnd('Execution Time: getAbastecimentosTable');
-      return data.map(mapPrismaToGraphQL);
+      try {
+        if (!abastecimentoService) throw new Error("AbastecimentoService ainda não inicializado");
+        return await abastecimentoService.getAbastecimentosTable(
+          args.limit,
+          args.offset,
+          args.sortBy,
+          args.sortDirection,
+          args.filters,
+          args.tableFilters
+        );
+      } catch (error) {
+        console.error("❌ Erro em getAbastecimentosTable:", error);
+        throw new Error("Erro ao buscar dados da tabela de abastecimentos.");
+      }
     },
 
-    getAbastecimentosTableCount: (_: unknown, { filters, tableFilters }: any) => {
-      console.time('Execution Time: getAbastecimentosTableCount');
-      const count = abastecimentoService.getTableCount(filters, tableFilters);
-      console.timeEnd('Execution Time: getAbastecimentosTableCount');
-      return count;
+    getAbastecimentosTableCount: async (_: unknown, { filters, tableFilters }: any) => {
+      try {
+        if (!abastecimentoService) throw new Error("AbastecimentoService ainda não inicializado");
+        return await abastecimentoService.getTableCount(filters, tableFilters);
+      } catch (error) {
+        console.error("❌ Erro em getAbastecimentosTableCount:", error);
+        throw new Error("Erro ao buscar contagem de registros da tabela de abastecimentos.");
+      }
     },
 
-    getAbastecimentoKpi: (_: unknown, { filters }: { filters?: AbastecimentoFilters }) => {
-      console.time('Execution Time: getAbastecimentoKpi');
-      const kpis = abastecimentoService.getKpis(filters);
-      console.timeEnd('Execution Time: getAbastecimentoKpi');
-      return kpis;
+    getAbastecimentoKpi: async (_: unknown, { filters }: { filters?: AbastecimentoFilters }) => {
+      try {
+        if (!abastecimentoService) throw new Error("AbastecimentoService ainda não inicializado");
+        return await abastecimentoService.getKpis(filters);
+      } catch (error) {
+        console.error("❌ Erro em getAbastecimentoKpi:", error);
+        throw new Error("Erro ao calcular KPIs de abastecimento.");
+      }
     },
 
-    AbastecimentoFilterOptions: (_: unknown, { filters }: { filters?: AbastecimentoOptionsFilters }) => {
-      console.time('Execution Time: AbastecimentoFilterOptions');
-      const options = abastecimentoService.getFilterOptions(filters);
-      console.timeEnd('Execution Time: AbastecimentoFilterOptions');
-      return options;
+    getAbastecimentoVehicleSummary: async () => {
+      try {
+        if (!abastecimentoService) throw new Error("AbastecimentoService ainda não inicializado");
+        return await abastecimentoService.getVehicleSummary();
+      } catch (error) {
+        console.error("❌ Erro em getAbastecimentoVehicleSummary:", error);
+        throw new Error("Erro ao gerar resumo de veículos.");
+      }
     },
 
-    getAbastecimentoCharts: (_: unknown, args: { vehicleLimit?: number, filters?: AbastecimentoFilters }) => {
-      console.time('Execution Time: getAbastecimentoCharts');
-      const charts = abastecimentoService.getCharts(args.vehicleLimit, args.filters);
-      console.timeEnd('Execution Time: getAbastecimentoCharts');
-      return charts;
+    AbastecimentoFilterOptions: async (_: unknown, { filters }: { filters?: AbastecimentoOptionsFilters }) => {
+      try {
+        if (!abastecimentoService) throw new Error("AbastecimentoService ainda não inicializado");
+        return await abastecimentoService.getFilterOptions(filters);
+      } catch (error) {
+        console.error("❌ Erro em AbastecimentoFilterOptions:", error);
+        throw new Error("Erro ao buscar opções de filtro.");
+      }
     },
 
-    getAbastecimentosColumns: () => {
-      // Esta função é estática e muito rápida, não precisa de log de tempo.
-      return [
-        { header: 'Data/Hora', accessor: 'datetime', sortable: true, dataType: 'datetime', isFilterable: false },
-        { header: 'Custo Total', accessor: 'cost', sortable: true, dataType: 'currency', isFilterable: true, filterKey: 'cost' },
-        { header: 'Litros', accessor: 'fuelVolume', sortable: true, dataType: 'number', isFilterable: true, filterKey: 'fuelVolume' },
-        { header: 'Combustível', accessor: 'fuelType', sortable: true, dataType: 'string', isFilterable: true, filterKey: 'fuelType' },
-        { header: 'Motorista', accessor: 'driverName', sortable: true, dataType: 'string', isFilterable: true, filterKey: 'driverName' },
-        { header: 'Placa', accessor: 'vehicle.plate', sortable: true, dataType: 'string', isFilterable: true, filterKey: 'vehiclePlate' },
-        { header: 'Modelo', accessor: 'vehicle.model', sortable: true, dataType: 'string', isFilterable: true, filterKey: 'vehicleModel' },
-        { header: 'Posto', accessor: 'gasStation.name', sortable: true, dataType: 'string', isFilterable: true, filterKey: 'gasStationName' },
-        { header: 'Cidade', accessor: 'gasStation.city', sortable: true, dataType: 'string', isFilterable: true, filterKey: 'gasStationCity' },
-        { header: 'Departamento', accessor: 'department', sortable: true, dataType: 'string', isFilterable: true, filterKey: 'department' },
-      ];
+    getAbastecimentoCharts: async (_: unknown, args: { vehicleLimit?: number; filters?: AbastecimentoFilters }) => {
+      try {
+        if (!abastecimentoService) throw new Error("AbastecimentoService ainda não inicializado");
+        return await abastecimentoService.getCharts(args.vehicleLimit, args.filters);
+      } catch (error) {
+        console.error("❌ Erro em getAbastecimentoCharts:", error);
+        throw new Error("Erro ao gerar gráficos de abastecimento.");
+      }
+    },
+
+    getAbastecimentosColumns: async () => {
+      try {
+        if (!abastecimentoService) throw new Error("AbastecimentoService ainda não inicializado");
+        return await abastecimentoService.getColumns();
+      } catch (error) {
+        console.error("❌ Erro em getAbastecimentosColumns:", error);
+        throw new Error("Erro ao buscar colunas da tabela de abastecimentos.");
+      }
     },
   },
-});
+}
 
-export default abastecimentoResolver;
+export default abastecimentoResolvers;

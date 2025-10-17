@@ -15,7 +15,7 @@ input AbastecimentoFiltersInput {
   vehicleModel: String
   gasStationCity: String
   gasStationName: String
-  excludePostoInterno: Boolean
+  excludePostoInterno: String
 }
 
 input AbastecimentoFiltersOptionsInput {
@@ -47,6 +47,7 @@ type Vehicle {
   plate: String
   model: String
   brand: String
+  kmRodado: Float
 }
 
 type GasStation {
@@ -64,7 +65,7 @@ type Abastecimento {
   vehicle: Vehicle
   gasStation: GasStation
   department: String
-  costCenter: String
+  km: Float
 }
 
 type AbastecimentoColumn {
@@ -90,7 +91,6 @@ type vehicleSummary {
   vehicle: Vehicle
   department: String
   totalCost: Float
-  supplyCount: Int
 }
 
 type FilterType {
@@ -158,20 +158,23 @@ type RankingByDepartment {
 }
 
 type AbastecimentoCharts {
-  costByVehicle: [CostByVehicle!]!
-  costByDepartment: [CostByDepartment!]!
-  costByCity: [CostByCity!]!
-  costByGasStation: [CostByGasStation!]!
-  costByPlate: [CostByPlate!]!
-  costByDate: [CostByDate!]!
-  costOverTime: [CostOverTime!]!
+  costByVehicle: [CostByVehicle!]
+  costByDepartment: [CostByDepartment!]
+  costByCity: [CostByCity!]
+  costByGasStation: [CostByGasStation!]
+  costByPlate: [CostByPlate!]
+  costByDate: [CostByDate!]
+  costOverTime: [CostOverTime!]
 
-  rankingByDate: [RankingByDate!]!
-  rankingByPlate: [RankingByPlate!]!
-  rankingByDepartment: [RankingByDepartment!]!
+  rankingByDate: [RankingByDate!]
+  rankingByPlate: [RankingByPlate!]
+  rankingByDepartment: [RankingByDepartment!]
 }
 
+scalar JSON
+
 type Query {
+  abastecimentoRawData: JSON
   getAbastecimentos(filters: AbastecimentoFiltersInput): [Abastecimento!]!
   getAbastecimentosTable(
     limit: Int
