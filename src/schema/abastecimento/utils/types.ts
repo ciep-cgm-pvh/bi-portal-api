@@ -61,7 +61,7 @@ export interface AbastecimentoFilters {
   gasStationName: string;
   gasStationCity: string;
   department: string;
-  excludePostoInterno: boolean
+  excludePostoInterno: string
 }
 export interface AbastecimentoOptionsFilters {
   dateRange: { from: string; to: string; };
@@ -70,7 +70,7 @@ export interface AbastecimentoOptionsFilters {
   gasStationName: string;
   gasStationCity: string;
   department: string;
-  excludePostoInterno: boolean
+  excludePostoInterno: string
 }
 
 export interface AbastecimentoTableFilters {
