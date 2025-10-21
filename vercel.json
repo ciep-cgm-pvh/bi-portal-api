@@ -2,7 +2,7 @@
   "version": 2,
   "builds": [
     {
-      "src": "api/**/*.ts",
+      "src": "src/**/*.ts",
       "use": "@vercel/node",
       "config": {
         "includeFiles": ["src/**", "prisma/**", "public/data/**", "data/**"]
@@ -20,7 +20,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "src/index.ts" 
+      "dest": "src/index.ts"
     }
   ]
 }
