@@ -15,7 +15,7 @@ export async function buildServer() {
     trustProxy: true, // Importante para Vercel
   });
 
-  const allowedOrigins = (process.env.FRONTEND_URLS || '').split(',').filter(Boolean);
+  const allowedOrigins = (process.env.FRONTEND_URLS || '').split(',').filter(Boolean).map(url => url.replace(/\/$/, ''));
   const isDev = process.env.NODE_ENV !== 'production';
 
   // CORS

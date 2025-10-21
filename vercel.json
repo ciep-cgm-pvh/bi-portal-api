@@ -17,11 +17,11 @@
   "routes": [
     {
       "src": "/graphql",
-      "dest": "/api/index.ts"
+      "dest": "src/index.ts"
     },
     {
       "src": "/graphiql",
-      "dest": "/api/index.ts"
+      "dest": "src/index.ts"
     },
     {
       "src": "/(.*)",
