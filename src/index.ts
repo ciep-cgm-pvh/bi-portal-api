@@ -3,7 +3,8 @@ import { buildServer } from './server';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const PORT = Number(process.env.PORT) || 3000;
-const isServerless = process.env.NODE_ENV === 'production';
+// const isServerless = process.env.NODE_ENV === 'production';
+const isServerless = process.env.VERCEL === '1';
 
 let cachedApp: any;
 
