@@ -54,6 +54,13 @@ export async function buildServer() {
   });
 
   const schema = await buildSchema(app);
+  // Mercurius (GraphQL)
+  await app.register(mercurius, {
+    schema,
+    context: () => ({}),
+    graphiql: true, // Habilita sempre (ou use isDev se preferir)
+    path: '/graphql', // Define o path explicitamente
+  });
 
   // Helmet
   await app.register(fastifyHelmet, {
@@ -73,13 +80,6 @@ export async function buildServer() {
       },
   });
 
-  // Mercurius (GraphQL)
-  await app.register(mercurius, {
-    schema,
-    context: () => ({}),
-    graphiql: true, // Habilita sempre (ou use isDev se preferir)
-    path: '/graphql', // Define o path explicitamente
-  });
 
   return app;
 }
