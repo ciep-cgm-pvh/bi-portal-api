@@ -1,5 +1,6 @@
 import { loadDiarias } from '../../data/loadDiarias';
 import { Processor } from '../../utils/processor';
+import { DiariasProcessor } from './diariasProcessor';
 import { mapToProcessed } from './utils/mapToProcessed';
 import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './utils/types';
 
@@ -13,8 +14,7 @@ export class DiariasService {
   }
 
   public getDiariasData(filters?: DiariasFilters): DiariaProcessed[] {
-    let filtered = Processor.applyFilters(this.processedData, filters)
-    return filtered
+    return DiariasProcessor.applyFilters(this.processedData, filters)
   }
 
   public getDiariasTableData(
@@ -23,9 +23,8 @@ export class DiariasService {
       sortBy?: string,
       sortDirection?: any,
       filters?: DiariasFilters,
-      tableFilters?: DiariasTableFilters) {
-      // pega dados já filtrados pelo getManutencao (dateRange + filtros gerais)
-      let filtered = Processor.applyFilters(this.getDiariasData(filters), filters, tableFilters);
+    tableFilters?: DiariasTableFilters): DiariaProcessed[]  {
+    let filtered = DiariasProcessor.applyFilters(this.processedData, filters, tableFilters);
     
     filtered = Processor.sortData(filtered, sortBy, (sortDirection || "ascending"))
 
@@ -37,7 +36,7 @@ export class DiariasService {
   }
 
   public getTableCount(filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
-      return Processor.applyFilters(this.processedData, filters, tableFilters).length;
+      return DiariasProcessor.applyFilters(this.processedData, filters, tableFilters).length;
   }
 
   public getKpi(filters?: DiariasFilters) {
@@ -106,31 +105,51 @@ export class DiariasService {
 
     // 1. Filtra dados com base em TODOS os filtros ativos
     let filtered = allData;
+
+    if (filters?.dateRange?.from) {
+      const fromDate = new Date(filters.dateRange.from);
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.paymentDate);
+        return itemDate !== null && itemDate >= fromDate;
+      });
+    }
+    if (filters?.dateRange?.to) {
+      const toDate = new Date(filters.dateRange.to);
+      filtered = filtered.filter(item => {
+        const itemDate = new Date(item.paymentDate);
+        return itemDate !== null && itemDate <= toDate;
+      });
+    }
+
     if (filters?.department) {
-      filtered = filtered.filter(item => item.department.toLowerCase() === filters.department.toLowerCase());
+      const departments = Array.isArray(filters.department)
+        ? filters.department.map(d => String(d).toLowerCase())
+        : [ String(filters.department).toLowerCase() ];
+
+      filtered = filtered.filter(item =>
+        departments.includes(String(item.department ?? '').toLowerCase())
+      );
     }
-    if (filters?.processNumber) {
-      filtered = filtered.filter(item => item.processNumber.toLowerCase() === filters.processNumber.toLowerCase());
-    }
-    if (filters?.paymentDate) {
-      filtered = filtered.filter(item => item.paymentDate.toLowerCase() === filters.paymentDate.toLowerCase());
+
+    if (filters?.status) {
+      filtered = filtered.filter(item => item.processNumber.toLowerCase() === filters.status.toLowerCase());
     }
 
     // 2. Gera as opções dinamicamente a partir do dataset já filtrado
     const departmentOptions = mapToFilterType(filtered.map(item => item.department));
     const processNumberOptions = mapToFilterType(filtered.map(item => item.processNumber));
-    const paymentDateOptions = mapToFilterType(filtered.map(item => item.paymentDate));
+    const statusOptions = mapToFilterType(filtered.map(item => item.status));
 
     return {
       department: departmentOptions,
       processNumber: processNumberOptions,
-      paymentDate: paymentDateOptions,
+      status: statusOptions,
     };
   }
 
   public getLastUpdate() {
     const dates = this.getDiariasData()
-      .map(item => item.paymentDate)
+      .map(item => item.approvedDate)
       .filter(Boolean)
       .map((dateStr: string) => {
         // Pega apenas a parte da data antes do espaço

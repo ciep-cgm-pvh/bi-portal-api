@@ -19,6 +19,7 @@ export const AbastecimentoProcessor = {
     return Number.isInteger(year) ? year : null;
   },
   
+
   processRow(row: Record<string, string | number>): ProcessedAbastecimentoRow {
     const processed: Record<string, any> = { ...row };
 
@@ -26,15 +27,15 @@ export const AbastecimentoProcessor = {
       processed[ field ] = Processor.normalizeNumber(row[ field ]);
     }
 
-    processed[ 'Ano' ] = AbastecimentoProcessor.parseYear(row[ 'Ano' ]);
+    // processed[ 'Ano' ] = AbastecimentoProcessor.parseYear(row[ 'Ano' ]);
 
-    const originalOrgao = String(processed[ 'Sub_Unidade' ]);
-    processed[ 'OrgaoUnificado' ] = unificationMap.get(originalOrgao) || originalOrgao;
+    // const originalOrgao = String(processed[ 'Subunidade' ]);
+    // processed[ 'OrgaoUnificado' ] = unificationMap.get(originalOrgao) || originalOrgao;
 
 
-    processed[ 'parsedDate' ] = Processor.parseDateDMY(
-      typeof row[ 'Data' ] === 'string' ? row[ 'Data' ] : undefined
-    );
+    // processed[ 'parsedDate' ] = Processor.formatDatePTBR(
+    //   typeof row[ 'Data' ] === 'string' ? row[ 'Data' ] : undefined
+    // );
 
     return processed;
   },

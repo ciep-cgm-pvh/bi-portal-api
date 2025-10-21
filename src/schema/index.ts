@@ -5,7 +5,7 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { FastifyInstance } from 'fastify';
 import path from 'path';
 import { diariasResolvers } from './diarias/diarias.resolver';
-import abastecimentoResolvers from './abastecimento/abastecimento.resolver';
+import abastecimentoResolver from './abastecimento/abastecimento.resolver';
 import osResolvers from './os/os.resolver';
 import { manutencaoResolvers } from './manutenção/manutencao.resolver';
 
@@ -19,7 +19,7 @@ export const buildSchema = async (app: FastifyInstance) => {
   // Registra os resolvers com o uso do Prisma(app)
   const resolvers = mergeResolvers([
     diariasResolvers(),
-    abastecimentoResolvers(),
+    abastecimentoResolver,
     manutencaoResolvers(),
     osResolvers(),
   ]);

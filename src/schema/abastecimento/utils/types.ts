@@ -37,12 +37,13 @@ export interface AbastecimentoProcessed {
   fuelVolume: number;
   fuelType: string;
   driverName: string;
+  km: number;
 
   vehicle: {
     plate: string;
     model: string;
     brand: string;
-    km: number;
+    kmRodado: number;
   };
 
   gasStation: {
@@ -51,26 +52,25 @@ export interface AbastecimentoProcessed {
   };
 
   department: string;
-  costCenter: string;
 }
 
 export interface AbastecimentoFilters {
   dateRange: { from: string; to: string; };
   vehiclePlate: string;
-  vehicleModel:  string;
+  vehicleModel: string;
   gasStationName: string;
   gasStationCity: string;
   department: string;
-  excludePostoInterno: boolean
+  excludePostoInterno: string
 }
 export interface AbastecimentoOptionsFilters {
   dateRange: { from: string; to: string; };
   vehiclePlate: string;
-  vehicleModel:  string;
+  vehicleModel: string;
   gasStationName: string;
   gasStationCity: string;
   department: string;
-  excludePostoInterno: boolean
+  excludePostoInterno: string
 }
 
 export interface AbastecimentoTableFilters {
@@ -80,10 +80,10 @@ export interface AbastecimentoTableFilters {
   fuelType: string;
   driverName: string;
   vehiclePlate: string;
-  vehicleModel: string ;
+  vehicleModel: string;
   vehicleBrand: string;
-  gasStationName: string ;
-  gasStationCity: string ;
+  gasStationName: string;
+  gasStationCity: string;
   department: string;
 }
 

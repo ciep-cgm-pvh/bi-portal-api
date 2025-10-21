@@ -5,11 +5,24 @@
       "src": "src/index.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["prisma/**", "src/schema/**/*.graphql"]
+        "includeFiles": [
+          "src/**",
+          "prisma/**",
+          "public/data/**",
+          "data/**"
+        ]
       }
     }
   ],
   "routes": [
+    {
+      "src": "/graphql",
+      "dest": "/api/index.ts"
+    },
+    {
+      "src": "/graphiql",
+      "dest": "/api/index.ts"
+    },
     {
       "src": "/(.*)",
       "dest": "src/index.ts" 
