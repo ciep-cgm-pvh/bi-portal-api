@@ -121,5 +121,8 @@ export async function buildServer() {
     });
   }
 
+  // defualt routr '/'
+  app.get('/', async () => ({ message: 'API is running' }));
+
   return app;
 }
