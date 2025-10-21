@@ -3,30 +3,12 @@
   "builds": [
     {
       "src": "src/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["src/**", "public/data/**", "data/**"]
-      }
-    }
-  ],
-  "routes": [
-    {
-      "src": "/graphql",
-      "dest": "src/index.ts",
-      "methods": ["GET", "POST", "OPTIONS"]
-    },
-    {
-      "src": "/graphiql",
-      "dest": "src/index.ts"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "src/index.ts"
+      "use": "@vercel/node"
     }
   ],
   "headers": [
     {
-      "source": "/graphql",
+      "source": "/(.*)",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
@@ -43,7 +25,7 @@
         {
           "key": "Access-Control-Allow-Credentials",
           "value": "true"
-        } 
+        }
       ]
     }
   ]
