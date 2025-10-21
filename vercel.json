@@ -9,15 +9,25 @@
   "routes": [
     {
       "src": "/graphql",
-      "methods": ["GET", "POST", "OPTIONS"],
+      "methods": ["OPTIONS"],
       "headers": {
         "Access-Control-Allow-Origin": "https://bi-portal-frontend-developer.vercel.app",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Allow-Credentials": "true"
       },
-      "dest": "src/index.ts",
-      "continue": true
+      "status": 200
+    },
+    {
+      "src": "/graphql",
+      "methods": ["GET", "POST"],
+      "headers": {
+        "Access-Control-Allow-Origin": "https://bi-portal-frontend-developer.vercel.app",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true"
+      },
+      "dest": "src/index.ts"
     },
     {
       "src": "/(.*)",
