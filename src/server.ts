@@ -25,28 +25,12 @@ export async function buildServer() {
     'http://localhost:5173'
   ];
 
-  // CORS - Configuração ajustada para Vercel
+  // CORS - Como o vercel.json já adiciona os headers, simplificamos aqui
   await app.register(cors, {
-    origin: (origin, cb) => {
-      // Permitir requisições sem origin (como Postman) em dev
-      if (!origin && isDev) {
-        cb(null, true);
-        return;
-      }
-
-      // Verificar se a origem está na lista permitida
-      if (origin && allowedOrigins.includes(origin)) {
-        cb(null, true);
-        return;
-      }
-
-      cb(new Error('Not allowed by CORS'), false);
-    },
+    origin: allowedOrigins,
     credentials: true,
     methods: [ 'GET', 'POST', 'OPTIONS' ],
     allowedHeaders: [ 'Content-Type', 'Authorization' ],
-    preflight: true,
-    strictPreflight: false,
   });
 
   // Rate Limit só em dev local (não serverless)
@@ -60,23 +44,6 @@ export async function buildServer() {
       }),
     });
   }
-
-  // Hook para adicionar headers CORS manualmente (garantia extra)
-  app.addHook('onRequest', async (request, reply) => {
-    const origin = request.headers.origin;
-
-    if (origin && allowedOrigins.includes(origin)) {
-      reply.header('Access-Control-Allow-Origin', origin);
-      reply.header('Access-Control-Allow-Credentials', 'true');
-      reply.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-      reply.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    }
-
-    // Responder imediatamente para OPTIONS
-    if (request.method === 'OPTIONS') {
-      reply.code(200).send();
-    }
-  });
 
   // Rota default
   app.get('/', async () => ({
@@ -120,9 +87,6 @@ export async function buildServer() {
         },
     });
   }
-
-  // defualt routr '/'
-  app.get('/', async () => ({ message: 'API is running' }));
 
   return app;
 }
