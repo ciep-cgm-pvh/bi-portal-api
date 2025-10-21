@@ -30,67 +30,6 @@ export class AbastecimentoService {
   }
 
   public async getAbastecimentosTable(limit?: number, offset?: number, sortBy?: string, sortDirection?: any, filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): Promise<AbastecimentoProcessed[]> { 
-    // const data = await this.getAbastecimentos(filters);
-    // if(!tableFilters) return data;
-
-    // let filtered = data;
-    // if (tableFilters.datetime) {
-    //   const search = tableFilters.datetime.toLowerCase();
-    //   filtered = filtered.filter(item => item.datetime?.includes(search));
-    // }
-  
-    // // --- Numeric Filters (busca parcial) ---
-    // if (tableFilters.cost) {
-    //   const searchCost = String(tableFilters.cost).replace(',', '.').trim();
-    //   filtered = filtered.filter(item =>
-    //     item.cost?.toString().toLowerCase().includes(searchCost)
-    //   );
-    // }
-
-    // if (tableFilters.fuelVolume) {
-    //   const searchFuel = String(tableFilters.fuelVolume).replace(',', '.').trim();
-    //   filtered = filtered.filter(item =>
-    //     item.fuelVolume?.toString().toLowerCase().includes(searchFuel)
-    //   );
-    // }
-
-    // // Filtros de texto (case-insensitive)
-    // const textFilters: { key: string; values: string[] }[] = [
-    //   { key: 'department', values: Processor.toArray(tableFilters.department).map(Processor.normalize) },
-    //   { key: 'datetime', values: Processor.toArray(tableFilters.datetime).map(Processor.normalize) },
-    //   { key: 'fuelType', values: Processor.toArray(tableFilters.fuelType).map(Processor.normalize) },
-    //   { key: 'driverName', values: Processor.toArray(tableFilters.driverName).map(Processor.normalize) },
-    //   { key: 'vehiclePlate', values: Processor.toArray(tableFilters.vehiclePlate).map(Processor.normalize) },
-    //   { key: 'vehicleModel', values: Processor.toArray(tableFilters.vehicleModel).map(Processor.normalize) },
-    //   { key: 'vehicleBrand', values: Processor.toArray(tableFilters.vehicleBrand).map(Processor.normalize) },
-    //   { key: 'gasStationCity', values: Processor.toArray(tableFilters.gasStationCity).map(Processor.normalize) },
-    //   { key: 'gasStationName', values: Processor.toArray(tableFilters.gasStationName).map(Processor.normalize) },
-    // ];
-
-    // for (const { key, values } of textFilters) {
-    //   if (values.length > 0) {
-    //     filtered = filtered.filter(item => {
-    //       let fieldValue: string = '';
-
-    //       if (key.startsWith('vehicle')) {
-    //         const prop = key.replace('vehicle', '').toLowerCase(); // plate, model, brand, km
-    //         const vehicleField = (item.vehicle as any)?.[ prop ];
-    //         fieldValue = vehicleField != null ? String(vehicleField) : '';
-    //       } else if (key.startsWith('gasStation')) {
-    //         const prop = key.replace('gasStation', '').toLowerCase(); // name, city
-    //         const gasField = (item.gasStation as any)?.[ prop ];
-    //         fieldValue = gasField != null ? String(gasField) : '';
-    //       } else {
-    //         const val = item[ key as keyof AbastecimentoProcessed ];
-    //         fieldValue = val != null ? String(val) : '';
-    //       }
-    //       fieldValue = Processor.normalize(fieldValue); // agora sempre é string
-
-    //       return values.some(term => fieldValue.toLowerCase().includes(term));
-    //     });
-    //   }
-    // }
-
     const params = mapFiltersToApiParams(filters, tableFilters);
     const response = await getAbastecimentoData("table_data", params);
     
@@ -272,8 +211,7 @@ export class AbastecimentoService {
   }
 
   public async getFilterOptions(filters?: AbastecimentoOptionsFilters) {
-    const params = mapFiltersToApiParams(filters);
-    const options = await this.FilterOptions(params ?? {});
+    const options = await this.FilterOptions(filters ?? {});
 
     return {
       departmentOptions: options.orgao.map((d) => ({ value: d, label: d })),

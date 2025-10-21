@@ -26,6 +26,8 @@ export async function buildServer() {
         ? allowedOrigins
         : true, // Aceita qualquer origem se não houver FRONTEND_URLS configurado
     credentials: true,
+    methods: [ 'GET', 'POST', 'OPTIONS' ],
+    allowedHeaders: [ 'Content-Type', 'Authorization' ],
   });
 
   // Rate Limit (pode dar problema no serverless, considere desabilitar)
