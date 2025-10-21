@@ -57,6 +57,7 @@ export async function buildServer() {
 
   // Helmet
   await app.register(fastifyHelmet, {
+    crossOriginResourcePolicy: false,
     contentSecurityPolicy: isDev
       ? false
       : {
