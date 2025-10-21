@@ -1,18 +1,20 @@
 // src/server.ts
+import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
-import dotenv from 'dotenv';
-import Fastify from 'fastify';
 import mercurius from 'mercurius';
+import dotenv from 'dotenv';
 import { buildSchema } from './schema/index';
 import { AbastecimentoService } from './schema/abastecimento/abastecimento.service';
 
 dotenv.config();
 
 export async function buildServer() {
+  const isDev = process.env.NODE_ENV !== 'production';
+
   const app = Fastify({
-    logger: process.env.NODE_ENV === 'production' ? false : true,
+    logger: isDev,
     trustProxy: true,
   });
 
@@ -20,12 +22,11 @@ export async function buildServer() {
     .split(',')
     .filter(Boolean)
     .map(url => url.replace(/\/$/, ''));
-  const isDev = process.env.NODE_ENV !== 'production';
 
   // CORS
   await app.register(cors, {
     origin: isDev
-      ? [ "http://localhost:5173", ...allowedOrigins ]
+      ? [ 'http://localhost:5173', ...allowedOrigins ]
       : allowedOrigins.length > 0
         ? allowedOrigins
         : true,
@@ -34,8 +35,8 @@ export async function buildServer() {
     allowedHeaders: [ 'Content-Type', 'Authorization' ],
   });
 
-  // Rate Limit
-  if (!process.env.VERCEL) {
+  // Rate Limit só em dev (não serverless)
+  if (isDev) {
     await app.register(fastifyRateLimit, {
       max: 50,
       timeWindow: '1 minute',
@@ -53,18 +54,18 @@ export async function buildServer() {
     version: '1.0.0',
   }));
 
-  // Inicializa o serviço de abastecimento
+  // Inicializa serviço
   const abastecimentoService = await AbastecimentoService.create();
   console.log('🚀 AbastecimentoService inicializado!');
 
   // Schema GraphQL
   const schema = await buildSchema(app);
 
-  // Mercurius (GraphQL)
+  // Mercurius
   await app.register(mercurius, {
     schema,
     context: () => ({ abastecimentoService }),
-    graphiql: true,
+    graphiql: isDev,
     path: '/graphql',
   });
 
