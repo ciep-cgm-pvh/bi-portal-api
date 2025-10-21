@@ -1,12 +1,12 @@
 // src/server.ts
-import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
-import mercurius from 'mercurius';
 import dotenv from 'dotenv';
-import { buildSchema } from './schema/index';
+import Fastify from 'fastify';
+import mercurius from 'mercurius';
 import { AbastecimentoService } from './schema/abastecimento/abastecimento.service';
+import { buildSchema } from './schema/index';
 
 dotenv.config();
 
@@ -25,11 +25,16 @@ export async function buildServer() {
 
   // CORS
   await app.register(cors, {
-    origin: isDev
-      ? [ 'http://localhost:5173', ...allowedOrigins ]
-      : allowedOrigins.length > 0
-        ? allowedOrigins
-        : true,
+    // origin: isDev
+    //   ? [ 'http://localhost:5173', ...allowedOrigins ]
+    //   : allowedOrigins.length > 0
+    //     ? allowedOrigins
+    //     : true,
+    origin: [
+      'https://bi-portal-frontend-developer.vercel.app',
+      'https://paineis-cgm.vercel.app',
+      'http://localhost:5173' // Mantemos para o desenvolvimento local
+    ],
     credentials: true,
     methods: [ 'GET', 'POST', 'OPTIONS' ],
     allowedHeaders: [ 'Content-Type', 'Authorization' ],
