@@ -10,8 +10,17 @@
     }
   ],
   "routes": [
-    { "src": "/graphql", "dest": "api/index.ts" },
-    { "src": "/graphiql", "dest": "api/index.ts" },
-    { "src": "/(.*)", "dest": "api/index.ts" }
+    {
+      "src": "/graphql",
+      "dest": "src/index.ts"
+    },
+    {
+      "src": "/graphiql",
+      "dest": "src/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "src/index.ts" 
+    }
   ]
 }
