@@ -6,10 +6,7 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": [
-          "src/**",
-          "prisma/**",
-          "public/data/**",
-          "data/**"
+          "src/schema/**/*.graphql"
         ]
       }
     }
@@ -17,15 +14,29 @@
   "routes": [
     {
       "src": "/graphql",
-      "dest": "src/index.ts"
+      "methods": ["OPTIONS"],
+      "headers": {
+        "Access-Control-Allow-Origin": "https://bi-portal-frontend-developer.vercel.app",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true"
+      },
+      "status": 200
     },
     {
-      "src": "/graphiql",
+      "src": "/graphql",
+      "methods": ["GET", "POST"],
+      "headers": {
+        "Access-Control-Allow-Origin": "https://bi-portal-frontend-developer.vercel.app",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true"
+      },
       "dest": "src/index.ts"
     },
     {
       "src": "/(.*)",
-      "dest": "src/index.ts" 
+      "dest": "src/index.ts"
     }
   ]
 }

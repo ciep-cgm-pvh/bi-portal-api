@@ -5,82 +5,88 @@ import fastifyRateLimit from '@fastify/rate-limit';
 import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import mercurius from 'mercurius';
+import { AbastecimentoService } from './schema/abastecimento/abastecimento.service';
 import { buildSchema } from './schema/index';
 
 dotenv.config();
 
 export async function buildServer() {
+  const isDev = process.env.NODE_ENV !== 'production';
+  const isVercel = process.env.VERCEL === '1';
+
   const app = Fastify({
-    logger: process.env.NODE_ENV === 'production' ? false : true,
-    trustProxy: true, // Importante para Vercel
+    logger: isDev,
+    trustProxy: true,
   });
 
-  const allowedOrigins = (process.env.FRONTEND_URLS || '').split(',').filter(Boolean).map(url => url.replace(/\/$/, ''));
-  const isDev = process.env.NODE_ENV !== 'production';
+  const allowedOrigins = [
+    'https://bi-portal-frontend-developer.vercel.app',
+    'https://paineis-cgm.vercel.app',
+    'http://localhost:5173'
+  ];
 
-  // CORS
+  // CORS - Como o vercel.json já adiciona os headers, simplificamos aqui
   await app.register(cors, {
-    origin: isDev
-      ? [ "http://localhost:5173", ...allowedOrigins ]
-      : allowedOrigins.length > 0
-        ? allowedOrigins
-        : true, // Aceita qualquer origem se não houver FRONTEND_URLS configurado
+    origin: allowedOrigins,
     credentials: true,
     methods: [ 'GET', 'POST', 'OPTIONS' ],
     allowedHeaders: [ 'Content-Type', 'Authorization' ],
   });
 
-  // Rate Limit (pode dar problema no serverless, considere desabilitar)
-  if (!process.env.VERCEL) {
+  // Rate Limit só em dev local (não serverless)
+  if (isDev && !isVercel) {
     await app.register(fastifyRateLimit, {
       max: 50,
-      timeWindow: "1 minute",
-      errorResponseBuilder: (req, context) => {
-        return {
-          code: "TOO_MANY_REQUESTS",
-          message: `Você fez muitas requisições. Tente novamente em ${context.after}`,
-        };
-      },
+      timeWindow: '1 minute',
+      errorResponseBuilder: (req, context) => ({
+        code: 'TOO_MANY_REQUESTS',
+        message: `Você fez muitas requisições. Tente novamente em ${context.after}`,
+      }),
     });
   }
 
-  // ROTA DEFAULT
-  app.get('/', async (request, reply) => {
-    return {
-      message: 'API is running',
-      graphql: isDev ? '/graphiql' : '/graphql',
-      version: '1.0.0'
-    };
-  });
+  // Rota default
+  app.get('/', async () => ({
+    message: 'API is running',
+    graphql: isDev ? '/graphiql' : '/graphql',
+    version: '1.0.0',
+  }));
 
+  // Inicializa serviço
+  const abastecimentoService = await AbastecimentoService.create();
+  console.log('🚀 AbastecimentoService inicializado!');
+
+  // Schema GraphQL
   const schema = await buildSchema(app);
 
-  // Helmet
-  await app.register(fastifyHelmet, {
-    crossOriginResourcePolicy: false,
-    contentSecurityPolicy: isDev
-      ? false
-      : {
-        directives: {
-          defaultSrc: [ "'self'" ],
-          scriptSrc: [ "'self'", "'unsafe-inline'", "'unsafe-eval'" ], // GraphiQL precisa disso
-          styleSrc: [ "'self'", "'unsafe-inline'" ],
-          imgSrc: [ "'self'", "data:", "https:" ],
-          fontSrc: [ "'self'" ],
-          objectSrc: [ "'none'" ],
-          frameAncestors: [ "'self'" ],
-          upgradeInsecureRequests: [],
-        },
-      },
-  });
-
-  // Mercurius (GraphQL)
+  // Mercurius
   await app.register(mercurius, {
     schema,
-    context: () => ({}),
-    graphiql: true, // Habilita sempre (ou use isDev se preferir)
-    path: '/graphql', // Define o path explicitamente
+    context: () => ({ abastecimentoService }),
+    graphiql: isDev,
+    path: '/graphql',
   });
+
+  // Helmet - Desabilitado em serverless para evitar conflitos
+  if (!isVercel) {
+    await app.register(fastifyHelmet, {
+      crossOriginResourcePolicy: false,
+      contentSecurityPolicy: isDev
+        ? false
+        : {
+          directives: {
+            defaultSrc: [ "'self'" ],
+            scriptSrc: [ "'self'", "'unsafe-inline'", "'unsafe-eval'" ],
+            styleSrc: [ "'self'", "'unsafe-inline'" ],
+            imgSrc: [ "'self'", 'data:', 'https:' ],
+            fontSrc: [ "'self'" ],
+            objectSrc: [ "'none'" ],
+            frameAncestors: [ "'self'" ],
+            upgradeInsecureRequests: [],
+          },
+        },
+    });
+  }
 
   return app;
 }

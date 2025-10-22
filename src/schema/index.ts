@@ -16,7 +16,7 @@ export const buildSchema = async (app: FastifyInstance) => {
   const typeDefs = mergeTypeDefs(typesArray);
   // const resolvers = mergeResolvers(loadedResolvers);
 
-  // Registra os resolvers com o uso do Prisma(app)
+  // Registra os resolvers
   const resolvers = mergeResolvers([
     diariasResolvers(),
     abastecimentoResolver,
