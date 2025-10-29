@@ -118,7 +118,7 @@ export class AbastecimentoService {
     const totalByDate = await getAbastecimentoData("dashboard/gasto_por_data", params);
     const resultadosByDate = totalByDate?.resultados || [];
     const rankingByDate = resultadosByDate.map((item: any) => ({
-      date: item.DataAbastecimento || "N/A",
+      date: Processor.formatDatePTBR(item.DataAbastecimento) || "N/A",
       total: Number(item.TotalGasto) || 0,
     })).sort((a: any, b: any) => b.total - a.total)
       .slice(0, 50);

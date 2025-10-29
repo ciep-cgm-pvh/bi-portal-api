@@ -114,7 +114,7 @@ export const Processor = {
     return isNaN(date.getTime()) ? "N/A" : date;
   },
 
-  // yyyy/mm/dd(T)hh:mm:ss ou yyyy/mm/dd => yyyy/mm/dd
+  // yyyy/mm/dd(T)hh:mm:ss ou yyyy/mm/dd => yyyy-mm-dd
   formatDateISO(dateInput?: string): string {
     if (!dateInput) return "N/A";
     const date = new Date(dateInput);
