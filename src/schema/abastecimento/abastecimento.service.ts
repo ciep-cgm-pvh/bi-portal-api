@@ -28,67 +28,27 @@ export class AbastecimentoService {
     const filteredData = await getAbastecimentoData("all", params);
     return mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(filteredData));
   }
-
+  
   public async getAbastecimentosTable(limit?: number, offset?: number, sortBy?: string, sortDirection?: any, filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): Promise<AbastecimentoProcessed[]> { 
     const params = mapFiltersToApiParams(filters, tableFilters);
     const response = await getAbastecimentoData("table_data", params);
     
     let filtered = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(response));
-
+    
     filtered = Processor.sortData(filtered, sortBy, sortDirection || "ascending");
-
+    
     if (typeof offset === "number" && typeof limit === "number") {
       filtered = filtered.slice(offset, offset + limit);
     }
-
+    
     return filtered;
   }
-
+  
   public async getTableCount(filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): Promise<number> {
-    const data = await this.getAbastecimentosTable(undefined, undefined, undefined, undefined, filters, tableFilters);
-    console.log("Table count data length:", data.length);
-    return data.length;
-  }
-
-  public async getLastUpdate() {
-    const abastecimentos = await this.getAbastecimentos();
-
-    const dates = abastecimentos
-      .map(item => item.datetime)
-      .filter(Boolean)
-      .map((dateStr: string) => {
-        const [ datePart ] = dateStr.split(" "); // ex: "2023-11-23"
-
-        let day: number | null = null;
-        let month: number | null = null;
-        let year: number | null = null;
-
-        if (datePart.includes("-")) {
-          // Formato YYYY-MM-DD
-          [ year, month, day ] = datePart.split("-").map(Number);
-        } else if (datePart.includes("/")) {
-          // Formato DD/MM/YYYY
-          [ day, month, year ] = datePart.split("/").map(Number);
-        }
-
-        if (day && month && year) {
-          return new Date(year, month - 1, day);
-        }
-
-        return null;
-      })
-      .filter((date: Date | null): date is Date => date !== null && !isNaN(date.getTime()));
-
-    if (dates.length === 0) return null;
-
-    const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
-
-    // Retorna no formato DD/MM/YYYY
-    const day = String(latestDate.getDate()).padStart(2, "0");
-    const month = String(latestDate.getMonth() + 1).padStart(2, "0");
-    const year = latestDate.getFullYear();
-
-    return `${year}-${month}-${day}`;
+    const params = mapFiltersToApiParams(filters, tableFilters);
+    const data = await getAbastecimentoData("table_data", params);
+    let filtered = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(data));
+    return filtered.length;
   }
 
   public async getKpis(filters?: AbastecimentoFilters) {
@@ -100,17 +60,19 @@ export class AbastecimentoService {
     // Vamos calcular veículos únicos aqui
     const uniqueVehicles = await getAbastecimentoData("kpi/veiculos_unicos", params);
 
+    const lastUpdateResponse = await getAbastecimentoData("kpi/last_update");
+    const lastUpdate = Processor.safeFormatDate(lastUpdateResponse.last_update)
+
     return {
       totalCost: Number(totalCost.total_gasto),
       fuelConsumed: Number(fuelConsumed.total_consumo_litros),
       vehiclesCount: Number(uniqueVehicles.total_veiculos_unicos),
-      lastUpdate: this.getLastUpdate(),
+      lastUpdate
     };
   }
 
   async getCharts(vehicleLimit: number = 10, filters?: AbastecimentoFilters) {
     const params = mapFiltersToApiParams(filters);
-    console.log("Params for charts:", params);
 
     // --- Custo por departamento ---
     const totalByDepartment = await getAbastecimentoData("dashboard/gastos_por_secretaria", params);
@@ -118,7 +80,8 @@ export class AbastecimentoService {
     const rankingByDepartment = resultadosByDepartment.map((item: any) => ({
       department: item.Subunidade || "N/A",
       total: Number(item.TotalGasto) || 0,
-    }));
+    })).sort((a: any, b: any) => b.total - a.total)
+      .slice(0, 50);
 
     const rankingSorted = [ ...rankingByDepartment ].sort((a, b) => b.total - a.total);
     const costByDepartment =
@@ -143,14 +106,6 @@ export class AbastecimentoService {
       .sort((a: any, b: any ) => b.total - a.total)
       .slice(0, vehicleLimit);
 
-    // --- Gasto por data ---
-    const totalByDate = await getAbastecimentoData("dashboard/gasto_por_data", params);
-    const resultadosByDate = totalByDate?.resultados || [];
-    const rankingByDate = resultadosByDate.map((item: any) => ({
-      date: item.DataAbastecimento || "N/A",
-      total: Number(item.TotalGasto) || 0,
-    }));
-
     // --- Gasto por mês ---
     const totalByMonth = await getAbastecimentoData("dashboard/gasto_por_mes", params);
     const resultadosByMonth = totalByMonth?.resultados || [];
@@ -158,6 +113,15 @@ export class AbastecimentoService {
       date: item.MesReferencia || "N/A",
       total: Number(item.TotalGasto) || 0,
     }));
+    
+    // --- Ranking por data ---
+    const totalByDate = await getAbastecimentoData("dashboard/gasto_por_data", params);
+    const resultadosByDate = totalByDate?.resultados || [];
+    const rankingByDate = resultadosByDate.map((item: any) => ({
+      date: item.DataAbastecimento || "N/A",
+      total: Number(item.TotalGasto) || 0,
+    })).sort((a: any, b: any) => b.total - a.total)
+      .slice(0, 50);
 
     // --- Ranking por veículo ---
     const totalByRankingPlate = await getAbastecimentoData("dashboard/ranking_por_veiculo", params);
@@ -166,7 +130,8 @@ export class AbastecimentoService {
       plate: item.Placa || "N/A",
       total: Number(item.TotalGasto) || 0,
       quantity: Number(item.QuantidadeAbastecimentos) || 0,
-    }));
+    })).sort((a: any, b: any) => b.total - a.total)
+      .slice(0, 50);
 
     return {
       costByDepartment,
@@ -177,7 +142,6 @@ export class AbastecimentoService {
       rankingByPlate,
     };
   }
-
 
   public async getVehicleSummary() {
     const data = await this.getAbastecimentos();
@@ -211,7 +175,7 @@ export class AbastecimentoService {
   }
 
   public async getFilterOptions(filters?: AbastecimentoOptionsFilters) {
-    const options = await this.FilterOptions(filters ?? {});
+    const options = await this.FilterOptions(filters);
 
     return {
       departmentOptions: options.orgao.map((d) => ({ value: d, label: d })),
@@ -222,17 +186,18 @@ export class AbastecimentoService {
     };
   }
 
-  public async FilterOptions(filters: Partial<AbastecimentoOptionsFilters> = {}) {
-    let filtered = await this.getAbastecimentos();
+  public async FilterOptions(filters?: AbastecimentoFilters) {
+    let filtered = await this.getAbastecimentos(filters);
+    console.log(filtered)
 
-    if (filters.dateRange?.from) {
+    if (filters?.dateRange?.from) {
       const fromDate = new Date(filters.dateRange.from);
       filtered = filtered.filter(item => {
         const itemDate = new Date(item.datetime);
         return itemDate !== null && itemDate >= fromDate;
       });
     }
-    if (filters.dateRange?.to) {
+    if (filters?.dateRange?.to) {
       const toDate = new Date(filters.dateRange.to);
       filtered = filtered.filter(item => {
         const itemDate = new Date(item.datetime);
@@ -240,23 +205,23 @@ export class AbastecimentoService {
       });
     }
 
-    if (filters.department) {
+    if (filters?.department) {
       filtered = filtered.filter(item => item.department === filters.department);
     }
 
-    if (filters.vehiclePlate) {
+    if (filters?.vehiclePlate) {
       filtered = filtered.filter(item => item.vehicle?.plate === filters.vehiclePlate);
     }
 
-    if (filters.vehicleModel) {
+    if (filters?.vehicleModel) {
       filtered = filtered.filter(item => item.vehicle?.model === filters.vehicleModel);
     }
 
-    if (filters.gasStationCity) {
+    if (filters?.gasStationCity) {
       filtered = filtered.filter(item => item.gasStation?.city === filters.gasStationCity);
     }
 
-    if (filters.gasStationName) {
+    if (filters?.gasStationName) {
       filtered = filtered.filter(item => item.gasStation?.name === filters.gasStationName);
     }
 
