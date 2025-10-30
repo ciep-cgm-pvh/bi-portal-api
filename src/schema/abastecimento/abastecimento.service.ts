@@ -188,7 +188,6 @@ export class AbastecimentoService {
 
   public async FilterOptions(filters?: AbastecimentoFilters) {
     let filtered = await this.getAbastecimentos(filters);
-    console.log(filtered)
 
     if (filters?.dateRange?.from) {
       const fromDate = new Date(filters.dateRange.from);
