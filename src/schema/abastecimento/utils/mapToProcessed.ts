@@ -60,15 +60,15 @@ export function mapFiltersToApiParams(
 ): Record<string, string> {
   const params: Record<string, string> = {};
 
-  // === 🗓️ Intervalo de data (vem sempre do filtro global) ===
+  // === Intervalo de data (vem sempre do filtro global) ===
   if (filters?.dateRange?.from) params.data_inicial = filters.dateRange.from;
   if (filters?.dateRange?.to) params.data_final = filters.dateRange.to;
 
   // === Filtro de posto inteno (global) ===
   if (filters?.excludePostoInterno) params.tipo_posto = filters.excludePostoInterno;
 
-  // === Combina os filtros (global tem prioridade) ===
-  const mergeFilters = { ...filters, ...tableFilters };
+  // === Combina os filtros ===
+  const mergeFilters = { ...filters};
 
   // Mapeia cada filtro apenas se tiver valor válido
   const addParam = (key: string, value: any) => {
@@ -77,17 +77,11 @@ export function mapFiltersToApiParams(
     }
   };
 
-  addParam("datetime_val", mergeFilters.datetime);
   addParam("placa", mergeFilters.vehiclePlate);
   addParam("modelo", mergeFilters.vehicleModel);
-  addParam("marca", mergeFilters.vehicleBrand);
   addParam("posto_nome", mergeFilters.gasStationName);
   addParam("posto_cidade", mergeFilters.gasStationCity);
   addParam("departamento", mergeFilters.department);
-  addParam("motorista", mergeFilters.driverName);
-  addParam("tipo_combustivel", mergeFilters.fuelType);
-  addParam("valor", mergeFilters.cost);
-  addParam("litros", mergeFilters.fuelVolume);
 
   return params;
 }
