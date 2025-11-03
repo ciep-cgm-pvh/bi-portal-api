@@ -114,7 +114,7 @@ export const Processor = {
     return isNaN(date.getTime()) ? "N/A" : date;
   },
 
-  // yyyy/mm/dd(T)hh:mm:ss ou yyyy/mm/dd => yyyy/mm/dd
+  // yyyy/mm/dd(T)hh:mm:ss ou yyyy/mm/dd => yyyy-mm-dd
   formatDateISO(dateInput?: string): string {
     if (!dateInput) return "N/A";
     const date = new Date(dateInput);
@@ -136,6 +136,24 @@ export const Processor = {
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
     return `${dd}/${mm}/${yyyy}`;
+  },
+
+  safeFormatDate(input ?: any) {
+    if (!input) return "N/A";
+
+    // Extrai apenas a primeira data válida (yyyy-mm-dd ou yyyy/mm/dd) e o primeiro horário, se existir
+    const match = input.match(/\d{4}[-/]\d{2}[-/]\d{2}/);
+    if (!match) return "N/A";
+
+    const datePart = match[ 0 ];
+    const date = new Date(datePart);
+    if (isNaN(date.getTime())) return "N/A";
+
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate() + 1).padStart(2, '0');
+
+    return `${yyyy}-${mm}-${dd}`;
   },
 
   // ----------- Processamento Genérico -----------

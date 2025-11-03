@@ -65,7 +65,7 @@ export function mapFiltersToApiParams(
   if (filters?.dateRange?.to) params.data_final = filters.dateRange.to;
 
   // === Filtro de posto inteno (global) ===
-  if (filters?.excludePostoInterno) params.tipo_posto = "externo";
+  if (filters?.excludePostoInterno) params.tipo_posto = filters.excludePostoInterno;
 
   // === Combina os filtros (global tem prioridade) ===
   const mergeFilters = { ...filters, ...tableFilters };
