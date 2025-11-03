@@ -29,26 +29,72 @@ export class AbastecimentoService {
     return mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(filteredData));
   }
   
-  public async getAbastecimentosTable(limit?: number, offset?: number, sortBy?: string, sortDirection?: any, filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): Promise<AbastecimentoProcessed[]> { 
-    const params = mapFiltersToApiParams(filters, tableFilters);
-    const response = await getAbastecimentoData("table_data", params);
-    
-    let filtered = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(response));
-    
-    filtered = Processor.sortData(filtered, sortBy, sortDirection || "ascending");
-    
-    if (typeof offset === "number" && typeof limit === "number") {
-      filtered = filtered.slice(offset, offset + limit);
+  public async getAbastecimentosTable(
+    limit?: number,
+    offset?: number,
+    sortBy?: string,
+    sortDirection?: any,
+    filters?: AbastecimentoFilters,
+    tableFilters?: AbastecimentoTableFilters
+  ): Promise<AbastecimentoProcessed[]> {
+    const globalParams = mapFiltersToApiParams(filters);
+    const response = await getAbastecimentoData("table_data", globalParams);
+
+    let processed = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(response));
+
+    if (tableFilters) {
+      processed = processed.filter(item => {
+        const matchesPlate = !tableFilters.vehiclePlate || item.vehicle.plate?.toLocaleLowerCase().includes(tableFilters.vehiclePlate);
+        const matchesModel = !tableFilters.vehicleModel || item.vehicle.model?.toLocaleLowerCase().includes(tableFilters.vehicleModel);
+        const matchesBrand = !tableFilters.vehicleBrand || item.vehicle.brand?.toLocaleLowerCase().includes(tableFilters.vehicleBrand);
+        const matchesDriverName = !tableFilters.driverName || item.driverName?.toLocaleLowerCase().includes(tableFilters.driverName);
+        const matchesDepartment = !tableFilters.department || item.department?.toLocaleLowerCase().includes(tableFilters.department);
+        const matchesDatetime = !tableFilters.datetime || item.datetime?.toString().includes(tableFilters.datetime);
+        const matchesCost = !tableFilters.cost || item.cost?.toString().includes(tableFilters.cost);
+        const matchesFuelVolume = !tableFilters.fuelVolume || item.fuelVolume?.toString().includes(tableFilters.fuelVolume);
+        const matchesFuelType = !tableFilters.fuelType || item.fuelType?.toLocaleLowerCase().includes(tableFilters.fuelType);
+        const matchesGasStationCity = !tableFilters.gasStationCity || item.gasStation.city?.toLocaleLowerCase().includes(tableFilters.gasStationCity);
+        const matchesGasStationName = !tableFilters.gasStationName || item.gasStation.name?.toLocaleLowerCase().includes(tableFilters.gasStationName);
+        return matchesPlate && matchesGasStationCity && matchesGasStationName && matchesDepartment && matchesModel && matchesBrand && matchesDriverName && matchesDatetime && matchesCost && matchesFuelType && matchesFuelVolume;
+      });
     }
-    
-    return filtered;
+
+    processed = Processor.sortData(processed, sortBy, sortDirection || "ascending");
+    if (typeof offset === "number" && typeof limit === "number") {
+      processed = processed.slice(offset, offset + limit);
+    }
+    return processed;
   }
   
-  public async getTableCount(filters?: AbastecimentoFilters, tableFilters?: AbastecimentoTableFilters): Promise<number> {
-    const params = mapFiltersToApiParams(filters, tableFilters);
-    const data = await getAbastecimentoData("table_data", params);
-    let filtered = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(data));
-    return filtered.length;
+  public async getTableCount(
+    filters?: AbastecimentoFilters,
+    tableFilters?: AbastecimentoTableFilters,
+    sortBy?: string,
+    sortDirection?: any
+  ): Promise<number> {
+    const globalParams = mapFiltersToApiParams(filters);
+    const response = await getAbastecimentoData("table_data", globalParams);
+    let processed = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(response));
+
+    if (tableFilters) {
+      processed = processed.filter(item => {
+        const matchesPlate = !tableFilters.vehiclePlate || item.vehicle.plate?.toLocaleLowerCase().includes(tableFilters.vehiclePlate);
+        const matchesModel = !tableFilters.vehicleModel || item.vehicle.model?.toLocaleLowerCase().includes(tableFilters.vehicleModel);
+        const matchesBrand = !tableFilters.vehicleBrand || item.vehicle.brand?.toLocaleLowerCase().includes(tableFilters.vehicleBrand);
+        const matchesDriverName = !tableFilters.driverName || item.driverName?.toLocaleLowerCase().includes(tableFilters.driverName);
+        const matchesDepartment = !tableFilters.department || item.department?.toLocaleLowerCase().includes(tableFilters.department);
+        const matchesDatetime = !tableFilters.datetime || item.datetime?.toString().includes(tableFilters.datetime);
+        const matchesCost = !tableFilters.cost || item.cost?.toString().includes(tableFilters.cost);
+        const matchesFuelVolume = !tableFilters.fuelVolume || item.fuelVolume?.toString().includes(tableFilters.fuelVolume);
+        const matchesFuelType = !tableFilters.fuelType || item.fuelType?.toLocaleLowerCase().includes(tableFilters.fuelType);
+        const matchesGasStationCity = !tableFilters.gasStationCity || item.gasStation.city?.toLocaleLowerCase().includes(tableFilters.gasStationCity);
+        const matchesGasStationName = !tableFilters.gasStationName || item.gasStation.name?.toLocaleLowerCase().includes(tableFilters.gasStationName);
+        return matchesPlate && matchesGasStationCity && matchesGasStationName && matchesDepartment && matchesModel && matchesBrand && matchesDriverName && matchesDatetime && matchesCost && matchesFuelType && matchesFuelVolume;
+      });
+    }
+
+    processed = Processor.sortData(processed, sortBy, sortDirection || "ascending");
+    return processed.length;
   }
 
   public async getKpis(filters?: AbastecimentoFilters) {

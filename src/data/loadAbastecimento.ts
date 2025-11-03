@@ -14,8 +14,8 @@ export async function getAbastecimentoData(path: string, filters?: Record<string
     });
     return response.data;
   } catch (error) {
-    console.error(`❌ Erro ao buscar ${path}:`, error);
-    throw new Error(`Erro ao acessar ${path}`);
+    console.error(`❌ Erro ao buscar rota de Abastecimento - ${path}:`, error);
+    throw new Error(`Erro ao acessar rota de Abastecimento - ${path}`);
   }
 }
 
