@@ -7,11 +7,9 @@ import { getAbastecimentoData } from '../../data/loadAbastecimento';
 
 export class AbastecimentoService {
   private rawData: any[];
-  private processedData: AbastecimentoProcessed[];
 
   constructor(rawData: any[]) {
     this.rawData = rawData;
-    this.processedData = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(this.rawData));
   }
 
   static async create(): Promise<AbastecimentoService> {
@@ -19,7 +17,7 @@ export class AbastecimentoService {
     return new AbastecimentoService(rawData);
   }
 
-  public getRawData() {
+  public getAbastecimentoRawData() {
     return this.rawData;
   }
 
