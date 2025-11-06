@@ -7,6 +7,7 @@ import Fastify from 'fastify';
 import mercurius from 'mercurius';
 import { AbastecimentoService } from './schema/abastecimento/abastecimento.service';
 import { buildSchema } from './schema/index';
+import { DiariasService } from './schema/diarias/diarias.service';
 
 dotenv.config();
 
@@ -53,8 +54,25 @@ export async function buildServer() {
   }));
 
   // Inicializa serviço
-  const abastecimentoService = await AbastecimentoService.create();
-  console.log('🚀 AbastecimentoService inicializado!');
+  const [ abastecimento ] = await Promise.allSettled([
+    AbastecimentoService.create(),
+    // DiariasService.create()
+  ]);
+
+  if (abastecimento.status === 'fulfilled')
+    console.log('🚀 AbastecimentoService inicializado!');
+  else
+    console.error('Erro ao inicializar AbastecimentoService:', abastecimento.reason);
+
+  // if (diarias.status === 'fulfilled')
+  //   console.log('🚀 DiariasService inicializado!');
+  // else
+  //   console.error('Erro ao inicializar DiariasService:', diarias.reason);
+
+  const abastecimentoService =
+    abastecimento.status === 'fulfilled' ? abastecimento.value : null;
+  // const diariasService =
+  //   diarias.status === 'fulfilled' ? diarias.value : null;
 
   // Schema GraphQL
   const schema = await buildSchema(app);

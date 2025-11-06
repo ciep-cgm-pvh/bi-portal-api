@@ -2,13 +2,12 @@
 import { AbastecimentoService } from './abastecimento.service';
 import { AbastecimentoFilters, AbastecimentoOptionsFilters, AbastecimentoTableFilters } from './utils/types';
 
-
 export const abastecimentoResolvers = {
   Query: {
     abastecimentoRawData: async (_: unknown, __: any, context: { abastecimentoService: AbastecimentoService }) => {
       const service = context.abastecimentoService;
       if (!service) throw new Error("AbastecimentoService não inicializado");
-      return await service.getRawData();
+      return await service.getAbastecimentoRawData();
     },
 
     // Dados gerais (filtros gerais, incluindo dateRange)

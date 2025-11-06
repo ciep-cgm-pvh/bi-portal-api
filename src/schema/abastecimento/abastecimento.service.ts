@@ -7,11 +7,9 @@ import { getAbastecimentoData } from '../../data/loadAbastecimento';
 
 export class AbastecimentoService {
   private rawData: any[];
-  private processedData: AbastecimentoProcessed[];
 
   constructor(rawData: any[]) {
     this.rawData = rawData;
-    this.processedData = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(this.rawData));
   }
 
   static async create(): Promise<AbastecimentoService> {
@@ -19,7 +17,7 @@ export class AbastecimentoService {
     return new AbastecimentoService(rawData);
   }
 
-  public getRawData() {
+  public getAbastecimentoRawData() {
     return this.rawData;
   }
 
@@ -100,6 +98,7 @@ export class AbastecimentoService {
   public async getKpis(filters?: AbastecimentoFilters) {
     const params = mapFiltersToApiParams(filters);
     const totalCost = await getAbastecimentoData("kpi/gastos_totais", params);
+    console.log(totalCost)
 
     const fuelConsumed = await getAbastecimentoData("kpi/consumo_total", params);
 
@@ -221,63 +220,72 @@ export class AbastecimentoService {
   }
 
   public async getFilterOptions(filters?: AbastecimentoOptionsFilters) {
-    const options = await this.FilterOptions(filters);
+    const params = mapFiltersToApiParams(filters);
+    const options = await getAbastecimentoData("filterOptions", params);
+
+    const {
+      departmentOptions,
+      vehiclePlateOptions,
+      vehicleModelOptions,
+      gasStationCityOptions,
+      gasStationNameOptions
+    } = options;
 
     return {
-      departmentOptions: options.orgao.map((d) => ({ value: d, label: d })),
-      vehiclePlateOptions: options.placa.map((p) => ({ value: p, label: p })),
-      vehicleModelOptions: options.modelo.map((m) => ({ value: m, label: m })),
-      gasStationCityOptions: options.cidadePosto.map((c) => ({ value: c, label: c })),
-      gasStationNameOptions: options.nomePosto.map((n) => ({ value: n, label: n })),
+      departmentOptions,
+      vehiclePlateOptions,
+      vehicleModelOptions,
+      gasStationCityOptions,
+      gasStationNameOptions
     };
   }
 
-  public async FilterOptions(filters?: AbastecimentoFilters) {
-    let filtered = await this.getAbastecimentos(filters);
+  // public async FilterOptions(filters?: AbastecimentoFilters) {
+  //   let filtered = await this.getAbastecimentos(filters);
 
-    if (filters?.dateRange?.from) {
-      const fromDate = new Date(filters.dateRange.from);
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.datetime);
-        return itemDate !== null && itemDate >= fromDate;
-      });
-    }
-    if (filters?.dateRange?.to) {
-      const toDate = new Date(filters.dateRange.to);
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.datetime);
-        return itemDate !== null && itemDate <= toDate;
-      });
-    }
+  //   if (filters?.dateRange?.from) {
+  //     const fromDate = new Date(filters.dateRange.from);
+  //     filtered = filtered.filter(item => {
+  //       const itemDate = new Date(item.datetime);
+  //       return itemDate !== null && itemDate >= fromDate;
+  //     });
+  //   }
+  //   if (filters?.dateRange?.to) {
+  //     const toDate = new Date(filters.dateRange.to);
+  //     filtered = filtered.filter(item => {
+  //       const itemDate = new Date(item.datetime);
+  //       return itemDate !== null && itemDate <= toDate;
+  //     });
+  //   }
 
-    if (filters?.department) {
-      filtered = filtered.filter(item => item.department === filters.department);
-    }
+  //   if (filters?.department) {
+  //     filtered = filtered.filter(item => item.department === filters.department);
+  //   }
 
-    if (filters?.vehiclePlate) {
-      filtered = filtered.filter(item => item.vehicle?.plate === filters.vehiclePlate);
-    }
+  //   if (filters?.vehiclePlate) {
+  //     filtered = filtered.filter(item => item.vehicle?.plate === filters.vehiclePlate);
+  //   }
 
-    if (filters?.vehicleModel) {
-      filtered = filtered.filter(item => item.vehicle?.model === filters.vehicleModel);
-    }
+  //   if (filters?.vehicleModel) {
+  //     filtered = filtered.filter(item => item.vehicle?.model === filters.vehicleModel);
+  //   }
 
-    if (filters?.gasStationCity) {
-      filtered = filtered.filter(item => item.gasStation?.city === filters.gasStationCity);
-    }
+  //   if (filters?.gasStationCity) {
+  //     filtered = filtered.filter(item => item.gasStation?.city === filters.gasStationCity);
+  //   }
 
-    if (filters?.gasStationName) {
-      filtered = filtered.filter(item => item.gasStation?.name === filters.gasStationName);
-    }
+  //   if (filters?.gasStationName) {
+  //     filtered = filtered.filter(item => item.gasStation?.name === filters.gasStationName);
+  //   }
 
-    return {
-      orgao: [ ...new Set(filtered.map(item => item.department).filter(Boolean)) ].sort(),
-      placa: [ ...new Set(filtered.map(item => item.vehicle?.plate).filter(Boolean)) ].sort(),
-      modelo: [ ...new Set(filtered.map(item => item.vehicle?.model).filter(Boolean)) ].sort(),
-      cidadePosto: [ ...new Set(filtered.map(item => item.gasStation?.city).filter(Boolean)) ].sort(),
-      nomePosto: [ ...new Set(filtered.map(item => item.gasStation?.name).filter(Boolean)) ].sort(),
-    };
-  }
+  //   return {
+  //     orgao: [ ...new Set(filtered.map(item => item.department).filter(Boolean)) ].sort(),
+  //     placa: [ ...new Set(filtered.map(item => item.vehicle?.plate).filter(Boolean)) ].sort(),
+  //     modelo: [ ...new Set(filtered.map(item => item.vehicle?.model).filter(Boolean)) ].sort(),
+  //     cidadePosto: [ ...new Set(filtered.map(item => item.gasStation?.city).filter(Boolean)) ].sort(),
+  //     nomePosto: [ ...new Set(filtered.map(item => item.gasStation?.name).filter(Boolean)) ].sort(),
+  //   };
+  // }
 
   getColumns() {
     return [
