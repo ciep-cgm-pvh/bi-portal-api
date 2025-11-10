@@ -40,19 +40,20 @@ export class AbastecimentoService {
 
     let processed = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(response));
 
+    console.log(tableFilters?.fuelType)
     if (tableFilters) {
       processed = processed.filter(item => {
-        const matchesPlate = !tableFilters.vehiclePlate || item.vehicle.plate?.toLocaleLowerCase().includes(tableFilters.vehiclePlate);
-        const matchesModel = !tableFilters.vehicleModel || item.vehicle.model?.toLocaleLowerCase().includes(tableFilters.vehicleModel);
-        const matchesBrand = !tableFilters.vehicleBrand || item.vehicle.brand?.toLocaleLowerCase().includes(tableFilters.vehicleBrand);
-        const matchesDriverName = !tableFilters.driverName || item.driverName?.toLocaleLowerCase().includes(tableFilters.driverName);
-        const matchesDepartment = !tableFilters.department || item.department?.toLocaleLowerCase().includes(tableFilters.department);
+        const matchesPlate = !tableFilters.vehiclePlate || item.vehicle.plate?.toLowerCase().includes(tableFilters.vehiclePlate.toLowerCase());
+        const matchesModel = !tableFilters.vehicleModel || item.vehicle.model?.toLowerCase().includes(tableFilters.vehicleModel.toLowerCase());
+        const matchesBrand = !tableFilters.vehicleBrand || item.vehicle.brand?.toLowerCase().includes(tableFilters.vehicleBrand.toLowerCase());
+        const matchesDriverName = !tableFilters.driverName || item.driverName?.toLowerCase().includes(tableFilters.driverName.toLowerCase());
+        const matchesDepartment = !tableFilters.department || item.department?.toLowerCase().includes(tableFilters.department[ 0 ].toLowerCase());
         const matchesDatetime = !tableFilters.datetime || item.datetime?.toString().includes(tableFilters.datetime);
         const matchesCost = !tableFilters.cost || item.cost?.toString().includes(tableFilters.cost);
         const matchesFuelVolume = !tableFilters.fuelVolume || item.fuelVolume?.toString().includes(tableFilters.fuelVolume);
-        const matchesFuelType = !tableFilters.fuelType || item.fuelType?.toLocaleLowerCase().includes(tableFilters.fuelType);
-        const matchesGasStationCity = !tableFilters.gasStationCity || item.gasStation.city?.toLocaleLowerCase().includes(tableFilters.gasStationCity);
-        const matchesGasStationName = !tableFilters.gasStationName || item.gasStation.name?.toLocaleLowerCase().includes(tableFilters.gasStationName);
+        const matchesFuelType = !tableFilters.fuelType || item.fuelType?.toLowerCase().includes(tableFilters.fuelType[ 0 ].toLowerCase());
+        const matchesGasStationCity = !tableFilters.gasStationCity || item.gasStation.city?.toLowerCase().includes(tableFilters.gasStationCity[ 0 ].toLowerCase());
+        const matchesGasStationName = !tableFilters.gasStationName || item.gasStation.name?.toLowerCase().includes(tableFilters.gasStationName[ 0 ].toLowerCase());
         return matchesPlate && matchesGasStationCity && matchesGasStationName && matchesDepartment && matchesModel && matchesBrand && matchesDriverName && matchesDatetime && matchesCost && matchesFuelType && matchesFuelVolume;
       });
     }
@@ -98,7 +99,6 @@ export class AbastecimentoService {
   public async getKpis(filters?: AbastecimentoFilters) {
     const params = mapFiltersToApiParams(filters);
     const totalCost = await getAbastecimentoData("kpi/gastos_totais", params);
-    console.log(totalCost)
 
     const fuelConsumed = await getAbastecimentoData("kpi/consumo_total", params);
 
