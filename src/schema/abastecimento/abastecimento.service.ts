@@ -42,17 +42,17 @@ export class AbastecimentoService {
 
     if (tableFilters) {
       processed = processed.filter(item => {
-        const matchesPlate = !tableFilters.vehiclePlate || item.vehicle.plate?.toLocaleLowerCase().includes(tableFilters.vehiclePlate);
-        const matchesModel = !tableFilters.vehicleModel || item.vehicle.model?.toLocaleLowerCase().includes(tableFilters.vehicleModel);
-        const matchesBrand = !tableFilters.vehicleBrand || item.vehicle.brand?.toLocaleLowerCase().includes(tableFilters.vehicleBrand);
-        const matchesDriverName = !tableFilters.driverName || item.driverName?.toLocaleLowerCase().includes(tableFilters.driverName);
-        const matchesDepartment = !tableFilters.department || item.department?.toLocaleLowerCase().includes(tableFilters.department);
+        const matchesPlate = !tableFilters.vehiclePlate || item.vehicle.plate?.toLocaleLowerCase().includes(tableFilters.vehiclePlate.toLocaleLowerCase());
+        const matchesModel = !tableFilters.vehicleModel || item.vehicle.model?.toLocaleLowerCase().includes(tableFilters.vehicleModel.toLocaleLowerCase());
+        const matchesBrand = !tableFilters.vehicleBrand || item.vehicle.brand?.toLocaleLowerCase().includes(tableFilters.vehicleBrand.toLocaleLowerCase());
+        const matchesDriverName = !tableFilters.driverName || item.driverName?.toLocaleLowerCase().includes(tableFilters.driverName.toLocaleLowerCase());
+        const matchesDepartment = !tableFilters.department || item.department?.toLocaleLowerCase().includes(tableFilters.department.toLocaleLowerCase());
         const matchesDatetime = !tableFilters.datetime || item.datetime?.toString().includes(tableFilters.datetime);
         const matchesCost = !tableFilters.cost || item.cost?.toString().includes(tableFilters.cost);
         const matchesFuelVolume = !tableFilters.fuelVolume || item.fuelVolume?.toString().includes(tableFilters.fuelVolume);
-        const matchesFuelType = !tableFilters.fuelType || item.fuelType?.toLocaleLowerCase().includes(tableFilters.fuelType);
-        const matchesGasStationCity = !tableFilters.gasStationCity || item.gasStation.city?.toLocaleLowerCase().includes(tableFilters.gasStationCity);
-        const matchesGasStationName = !tableFilters.gasStationName || item.gasStation.name?.toLocaleLowerCase().includes(tableFilters.gasStationName);
+        const matchesFuelType = !tableFilters.fuelType || item.fuelType?.toLocaleLowerCase().includes(tableFilters.fuelType.toLocaleLowerCase());
+        const matchesGasStationCity = !tableFilters.gasStationCity || item.gasStation.city?.toLocaleLowerCase().includes(tableFilters.gasStationCity.toLocaleLowerCase());
+        const matchesGasStationName = !tableFilters.gasStationName || item.gasStation.name?.toLocaleLowerCase().includes(tableFilters.gasStationName.toLocaleLowerCase());
         return matchesPlate && matchesGasStationCity && matchesGasStationName && matchesDepartment && matchesModel && matchesBrand && matchesDriverName && matchesDatetime && matchesCost && matchesFuelType && matchesFuelVolume;
       });
     }
