@@ -31,59 +31,87 @@ input DiariasTableFilters {
 
 # Dados para os KPIs
 type KpiData {
-  totalGasto: Float
+  totalAprovado: Float
+  totalConcedido: Float
   totalDiarias: Int
 }
 
 # Dados para o gráfico de Top Orgaos
-type OrgaoGastoDiaria {
+type GastoOrgaoDiaria {
+  name: String!
+  total: Float!
+}
+
+type GastoFuncionarioDiaria {
   name: String!
   total: Float!
 }
 
 # Dados para o gráfico de Gasto Mensal
-type GastoMesDiaria {
-  month: String!
+type GastoPlanoDespesaDiaria {
+  name: String!
   total: Float!
 }
 
 type DiariasCharts {
-  GastoMesDiaria: [GastoMesDiaria]!
-  OrgaoGastoDiaria: [OrgaoGastoDiaria]!
+  GastoOrgaoDiaria: [GastoOrgaoDiaria]!
+  GastoFuncionarioDiaria: [GastoFuncionarioDiaria]!
+  GastoPlanoDespesaDiaria: [GastoPlanoDespesaDiaria]!
 }
 
 type Diarias {
-  department: String
-  budgetUnit: String
-  action: String
-  expensePlan: String
-  resourceSource: String
   expenseType: String
-  payment: String
+  paymentNumber: String
   paymentDate: String
-  settlement: String
-  commitment: String
+  settlementNumber: String
+  fiscalDoc: String
+  commitmentNumber: String
   employee: String
+  employeeDoc: String
+  limitDeliveryDate: String
+  limitSpendDate: String
+  requestDate: String
   history: String
-  processNumber: String
-  defaultDate: String
-  delayDays: String
-  approvedDate: String
-  canceledDate: String
-  amountToApprove: Float
+  amountRequested: Float
+  approvalDate: String
   amountApproved: Float
-  amountCanceled: Float
-  amountGranted: Float
+  disallowedDate: String
+  disallowedValue: Float
+  defaultDate: String
+  defaultValue: Float
+  grantedDate: String
+  grantedValue: Float
+  canceledDate: String
+  canceledValue: Float
+  grantedAmount: Float
   balance: Float
+  entityName: String
+  departmentCode: String
+  budgetUnitCode: String
+  functionCode: String
+  subFunctionCode: String
+  programCode: String
+  actionCode: String
+  expensePlanCode: String
+  subElementCode: String
+  resourceSourceCode: String
+  baseDate: String
+  finalAccountDate: String
+  delayDays: String
+  processNumber: String
+  advanceNumber: String
+  id: ID
+  status: String
 }
+
 # O tipo Diaria para a tabela
 type DiariaTable {
-  department: String
-  amountGranted: Float
-  status: String
-  employee: String
-  paymentDate: String
+  departmentCode: String
   processNumber: String
+  employee: String
+  grantedAmount: Float
+  grantedDate: String
+  status: String
 }
 
 type FilterOption {
@@ -114,7 +142,7 @@ type Query {
     tableFilters: DiariasTableFilters
   ): Int!
 
-  getDiariasLastUpdate: String!
+  getDiariasLastUpdate: DateTime!
   getDiariasKpi(filters: DiariasFilters): KpiData!
   getDiariasCharts(filters: DiariasFilters): DiariasCharts!
   getDiariasFiltersOptions(filters: DiariasFiltersOptions): FilterOptionsDiaria!

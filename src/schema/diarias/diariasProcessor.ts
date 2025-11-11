@@ -1,48 +1,8 @@
-import { Processor } from '../../utils/processor';
-import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './utils/types';
+import { DiariaProcessed, DiariasTableFilters } from './utils/types';
 
 export const DiariasProcessor = {
-  applyFilters(data: DiariaProcessed[], filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
+  applyTableFilters(data: DiariaProcessed[], tableFilters?: DiariasTableFilters) {
     let filtered = [ ...data ];
-    
-    filtered = filtered.filter(item => {
-      const hasCancelamento = Number(item.amountCanceled || 0) > 0;
-      const hasDataCancelada = item.canceledDate && item.canceledDate.trim() !== '';
-      const hasInadimplencia = item.defaultDate != null && item.defaultDate.trim() !== '';
-
-      // remove a linha se algum desses existir
-      return !(hasCancelamento || hasDataCancelada || hasInadimplencia);
-    });
-
-    if (!filters) return filtered;
-
-    if (filters) {
-      if (filters.dateRange) {
-        const from = new Date(filters.dateRange.from);
-        const to = new Date(filters.dateRange.to);
-
-        filtered = filtered.filter(item => {
-          if (!item.paymentDate) return false;
-          const dt = Processor.parseDateDMY(item.paymentDate);
-          if (!dt) return false;
-          return dt >= from && dt <= to;
-        });
-      }
-
-      if (filters.department) {
-        const val = String(filters.department).toLowerCase();
-        filtered = filtered.filter((item) =>
-          String(item.department ?? '').toLowerCase().includes(val)
-        );
-      }
-      
-      if (filters.status) {
-        const val = filters.status.toLowerCase();
-        filtered = filtered.filter((item) =>
-          item.department?.toLowerCase().includes(val)
-        );
-      }
-    }
       
     if(!tableFilters) return filtered;
 
@@ -54,10 +14,10 @@ export const DiariasProcessor = {
         });
       }
 
-      if (tableFilters.department !== undefined && tableFilters.department !== null && String(tableFilters.department) !== '') {
-        const searchDepartment = String(tableFilters.department).toLowerCase();
+      if (tableFilters.departmentCode !== undefined && tableFilters.departmentCode !== null && String(tableFilters.departmentCode) !== '') {
+        const searchDepartmentCode = String(tableFilters.departmentCode).toLowerCase();
         filtered = filtered.filter((item) => 
-          String(item.department).toLowerCase().includes(searchDepartment)
+          String(item.departmentCode).toLowerCase().includes(searchDepartmentCode)
         )
       }
 
@@ -71,9 +31,9 @@ export const DiariasProcessor = {
         filtered = filtered.filter((item) => String(item.processNumber ?? '').includes(searchCost));
       }
       
-      if (tableFilters.amountGranted !== undefined && tableFilters.amountGranted !== null && String(tableFilters.amountGranted) !== '') {
-        const searchCost = String(tableFilters.amountGranted).replace(',', '.').trim();
-        filtered = filtered.filter((item) => String(item.amountGranted ?? '').includes(searchCost));
+      if (tableFilters.grantedValue !== undefined && tableFilters.grantedValue !== null && String(tableFilters.grantedValue) !== '') {
+        const searchCost = String(tableFilters.grantedValue).replace(',', '.').trim();
+        filtered = filtered.filter((item) => String(item.grantedValue ?? '').includes(searchCost));
       }
 
       if (tableFilters.status !== undefined && tableFilters.status !== null && String(tableFilters.status) !== '') {

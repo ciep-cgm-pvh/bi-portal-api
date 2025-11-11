@@ -1,173 +1,152 @@
-import { loadDiarias } from '../../data/loadDiarias';
+import { getDiariasData } from '../../data/loadDiarias';
 import { Processor } from '../../utils/processor';
+import { mapFiltersToApiParams } from '../abastecimento/utils/mapToProcessed';
 import { DiariasProcessor } from './diariasProcessor';
-import { mapToProcessed } from './utils/mapToProcessed';
+import { mapToProcessedAll, mapToProcessedTable} from './utils/mapToProcessed';
 import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './utils/types';
 
 export class DiariasService {
-  private rawData: any;
-  private processedData: DiariaProcessed[];
+  private rawData: any[];
 
-  constructor() {
-    this.rawData = loadDiarias();
-    this.processedData = mapToProcessed(Processor.processData(this.rawData));
+  constructor(rawData: any []) {
+    this.rawData = rawData;
   }
 
-  public getDiariasData(filters?: DiariasFilters): DiariaProcessed[] {
-    return DiariasProcessor.applyFilters(this.processedData, filters)
+  static async create(): Promise<DiariasService> {
+    const rawData = await getDiariasData("all");
+    return new DiariasService(rawData);
   }
 
-  public getDiariasTableData(
+  public async getDiarias(filters?: DiariasFilters): Promise<DiariaProcessed[]> {
+    const params = mapFiltersToApiParams(filters);
+    const data = await getDiariasData("all", params);
+    // console.log("diarias: ", data[1])
+    return mapToProcessedAll(data);
+  }
+
+  public async getDiariasTableData(
       limit?: number,
       offset?: number,
       sortBy?: string,
       sortDirection?: any,
       filters?: DiariasFilters,
-    tableFilters?: DiariasTableFilters): DiariaProcessed[]  {
-    let filtered = DiariasProcessor.applyFilters(this.processedData, filters, tableFilters);
+    tableFilters?: DiariasTableFilters): Promise<Partial<DiariaProcessed>[]>  {
+    const params = mapFiltersToApiParams(filters);
+    let data = await getDiariasData("table_data", params);
     
-    filtered = Processor.sortData(filtered, sortBy, (sortDirection || "ascending"))
-
+    data = DiariasProcessor.applyTableFilters(data, tableFilters)
+    
+    data = Processor.sortData(data, sortBy, (sortDirection || "ascending"))
     if (typeof offset === 'number' && typeof limit === 'number') {
-      filtered = filtered.slice(offset, offset + limit);
+      data = data.slice(offset, offset + limit);
     }
-    
-    return filtered;
+    data = mapToProcessedTable(data)
+    // console.log("diariasTable: ", mapToProcessedTable(data)[1])
+    return data;
   }
 
-  public getTableCount(filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
-      return DiariasProcessor.applyFilters(this.processedData, filters, tableFilters).length;
+  public async getDiariasTableCount(filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
+    // ajustar no bi-portal-data, pois só esta mandando os 1000 primeiros dados
+    const params = mapFiltersToApiParams(filters);
+    let data = await getDiariasData("table_data", params);
+    data = DiariasProcessor.applyTableFilters(data, tableFilters)
+    return data.length;
   }
 
-  public getKpi(filters?: DiariasFilters) {
-    const data = this.getDiariasData(filters)
+  public async getDiariasLastUpdate() {
+    const lastUpdate = await getDiariasData("kpi/last_update")
+    return lastUpdate
+  }
 
-    //Custo total
-    const totalGasto = data.map(r => Number(r.amountGranted) || 0).reduce((acc, val) => acc + val, 0)
+  public async getKpi(filters?: DiariasFilters) {
+    const params = mapFiltersToApiParams(filters);
+    const data = await getDiariasData("kpis/gerais", params);
 
-    const totalDiarias = data.filter(d => d.approvedDate && d.approvedDate !== "N/A").length;
-
+    const totalConcedido = data.resultados.total_concedido
+    const totalAprovado = data.resultados.total_aprovado
+    const totalDiarias = data.resultados.total_processos_unicos
     return {
-      totalGasto,
+      totalConcedido,
+      totalAprovado,
       totalDiarias
-    }
-  }
-
-  public getCharts(filters?: DiariasFilters) {
-    const data = this.getDiariasData(filters);
-
-    // --- Gasto por mês ---
-    const GastoMesDiaria = data.reduce<Record<string, number>>((acc, item) => {
-      if (!item.paymentDate) return acc;
-
-      const [ day, month, year ] = item.paymentDate.split('/').map(Number);
-      if (!day || !month || !year) return acc;
-
-      const mesAno = `${String(month).padStart(2, '0')}/${year}`;
-      acc[ mesAno ] = (acc[ mesAno ] || 0) + (Number(item.amountGranted) || 0);
-
-      return acc;
-    }, {})
-
-    const gastoMesArray = Object.entries(GastoMesDiaria)
-      .map(([ month, total ]) => ({ month, total }))
-      .sort((a, b) => {
-        const [ m1, y1 ] = a.month.split('/');
-        const [ m2, y2 ] = b.month.split('/');
-        return new Date(Number(y1), Number(m1) - 1, 1).getTime() -
-          new Date(Number(y2), Number(m2) - 1, 1).getTime();
-      });
-
-    // --- Gasto por órgão ---
-    const OrgaoGastoDiaria = data.reduce<Record<string, number>>((acc, item) => {
-      const orgao = item.department || 'N/A';
-      acc[ orgao ] = (acc[ orgao ] || 0) + (Number(item.amountGranted) || 0);
-      return acc;
-    }, {});
-
-    const orgaoArray = Object.entries(OrgaoGastoDiaria)
-      .map(([ name, total ]) => ({ name, total }))
-      .sort((a, b) => b.total - a.total);
-
-    // --- Retorno final ---
-    return {
-      GastoMesDiaria: gastoMesArray,
-      OrgaoGastoDiaria: orgaoArray
     };
   }
 
-  public getFilterOptions(filters?: DiariasFilters) {
-    const allData = this.getDiariasData();
+  public async getCharts(filters?: DiariasFilters) {
+    const params = mapFiltersToApiParams(filters);
+    const data1 = await getDiariasData("dashboard/gastos_por_entidade", params);
+    const data2 = await getDiariasData("dashboard/gastos_por_plano_despesa", params);
+    const data3 = await getDiariasData("dashboard/gastos_por_funcionario", params);
 
-    const mapToFilterType = (arr: (string | undefined | null)[]) =>
-      Array.from(new Set(arr.filter(Boolean))).sort()
-        .map(value => ({ value: value!, label: value! }));
-
-    // 1. Filtra dados com base em TODOS os filtros ativos
-    let filtered = allData;
-
-    if (filters?.dateRange?.from) {
-      const fromDate = new Date(filters.dateRange.from);
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.paymentDate);
-        return itemDate !== null && itemDate >= fromDate;
-      });
-    }
-    if (filters?.dateRange?.to) {
-      const toDate = new Date(filters.dateRange.to);
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.paymentDate);
-        return itemDate !== null && itemDate <= toDate;
-      });
-    }
-
-    if (filters?.department) {
-      const departments = Array.isArray(filters.department)
-        ? filters.department.map(d => String(d).toLowerCase())
-        : [ String(filters.department).toLowerCase() ];
-
-      filtered = filtered.filter(item =>
-        departments.includes(String(item.department ?? '').toLowerCase())
-      );
-    }
-
-    if (filters?.status) {
-      filtered = filtered.filter(item => item.processNumber.toLowerCase() === filters.status.toLowerCase());
-    }
-
-    // 2. Gera as opções dinamicamente a partir do dataset já filtrado
-    const departmentOptions = mapToFilterType(filtered.map(item => item.department));
-    const processNumberOptions = mapToFilterType(filtered.map(item => item.processNumber));
-    const statusOptions = mapToFilterType(filtered.map(item => item.status));
+    const GastoOrgaoDiaria = data1.resultados.map((item: any) => ({
+      name: item.nomEntidade,
+      total: item.TotalGasto,
+    }));
+    const GastoPlanoDespesaDiaria = data2.resultados.map((item: any) => ({
+      name: item.nomEntidade,
+      total: item.TotalGasto,
+    }));
+    const GastoFuncionarioDiaria = data3.resultados.map((item: any) => ({
+      name: item.funcionario,
+      total: item.TotalGasto,
+    }));
+    console.log(data3)
 
     return {
-      department: departmentOptions,
-      processNumber: processNumberOptions,
-      status: statusOptions,
-    };
+      GastoPlanoDespesaDiaria,
+      GastoFuncionarioDiaria,
+      GastoOrgaoDiaria
+    }
   }
 
-  public getLastUpdate() {
-    const dates = this.getDiariasData()
-      .map(item => item.approvedDate)
-      .filter(Boolean)
-      .map((dateStr: string) => {
-        // Pega apenas a parte da data antes do espaço
-        const [ datePart ] = dateStr.split(" "); // "31/07/2025"
-        const [ day, month, year ] = datePart.split("/").map(Number);
-        return new Date(year, month - 1, day);
-      })
-      .filter((date: Date) => !isNaN(date.getTime()));
+  // public getFilterOptions(filters?: DiariasFilters) {
+  //   const allData = this.getDiariasData();
 
-    if (dates.length === 0) return null;
+  //   const mapToFilterType = (arr: (string | undefined | null)[]) =>
+  //     Array.from(new Set(arr.filter(Boolean))).sort()
+  //       .map(value => ({ value: value!, label: value! }));
 
-    const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
+  //   // 1. Filtra dados com base em TODOS os filtros ativos
+  //   let filtered = allData;
 
-    // Retorna só no formato DD/MM/YYYY
-    const day = String(latestDate.getDate()).padStart(2, "0");
-    const month = String(latestDate.getMonth() + 1).padStart(2, "0");
-    const year = latestDate.getFullYear();
+  //   if (filters?.dateRange?.from) {
+  //     const fromDate = new Date(filters.dateRange.from);
+  //     filtered = filtered.filter(item => {
+  //       const itemDate = new Date(item.paymentDate);
+  //       return itemDate !== null && itemDate >= fromDate;
+  //     });
+  //   }
+  //   if (filters?.dateRange?.to) {
+  //     const toDate = new Date(filters.dateRange.to);
+  //     filtered = filtered.filter(item => {
+  //       const itemDate = new Date(item.paymentDate);
+  //       return itemDate !== null && itemDate <= toDate;
+  //     });
+  //   }
 
-    return `${year}-${month}-${day}`;
-  }
+  //   if (filters?.department) {
+  //     const departments = Array.isArray(filters.department)
+  //       ? filters.department.map(d => String(d).toLowerCase())
+  //       : [ String(filters.department).toLowerCase() ];
+
+  //     filtered = filtered.filter(item =>
+  //       departments.includes(String(item.department ?? '').toLowerCase())
+  //     );
+  //   }
+
+  //   if (filters?.status) {
+  //     filtered = filtered.filter(item => item.processNumber.toLowerCase() === filters.status.toLowerCase());
+  //   }
+
+  //   // 2. Gera as opções dinamicamente a partir do dataset já filtrado
+  //   const departmentOptions = mapToFilterType(filtered.map(item => item.department));
+  //   const processNumberOptions = mapToFilterType(filtered.map(item => item.processNumber));
+  //   const statusOptions = mapToFilterType(filtered.map(item => item.status));
+
+  //   return {
+  //     department: departmentOptions,
+  //     processNumber: processNumberOptions,
+  //     status: statusOptions,
+  //   };
+  // }
 }
