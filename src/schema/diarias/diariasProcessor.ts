@@ -6,41 +6,21 @@ export const DiariasProcessor = {
       
     if(!tableFilters) return filtered;
 
-    if (tableFilters) {
-      if (tableFilters.paymentDate) {
-        const searchPaymentDate = String(tableFilters.paymentDate).toLowerCase();
-        filtered = filtered.filter((item) => {
-          return String(item.paymentDate).toLowerCase().includes(searchPaymentDate);
-        });
-      }
+    filtered = filtered.filter(item => {
+      const matchesProcessNumber = !tableFilters.processNumber || item.processNumber?.toLowerCase().includes(tableFilters.processNumber.toLowerCase());
 
-      if (tableFilters.departmentCode !== undefined && tableFilters.departmentCode !== null && String(tableFilters.departmentCode) !== '') {
-        const searchDepartmentCode = String(tableFilters.departmentCode).toLowerCase();
-        filtered = filtered.filter((item) => 
-          String(item.departmentCode).toLowerCase().includes(searchDepartmentCode)
-        )
-      }
+      const matchesDepartmentCode = !tableFilters.departmentCode || item.departmentCode?.toLowerCase().includes(tableFilters.departmentCode.toLowerCase());
 
-      if (tableFilters.employee !== undefined && tableFilters.employee !== null && String(tableFilters.employee) !== '') {
-        const employee = String(tableFilters.employee).toLowerCase();
-        filtered = filtered.filter((item) => String(item.employee).toLowerCase().includes(employee));
-      }
+      const matchesEmployee = !tableFilters.employee || item.employee?.toLowerCase().includes(tableFilters.employee.toLowerCase());
 
-      if (tableFilters.processNumber !== undefined && tableFilters.processNumber !== null && String(tableFilters.processNumber) !== '') {
-        const searchCost = String(tableFilters.processNumber).replace(',', '.').trim();
-        filtered = filtered.filter((item) => String(item.processNumber ?? '').includes(searchCost));
-      }
-      
-      if (tableFilters.grantedValue !== undefined && tableFilters.grantedValue !== null && String(tableFilters.grantedValue) !== '') {
-        const searchCost = String(tableFilters.grantedValue).replace(',', '.').trim();
-        filtered = filtered.filter((item) => String(item.grantedValue ?? '').includes(searchCost));
-      }
+      const matchesGrantedAmount = !tableFilters.grantedAmount || item.grantedAmount?.toString().toLowerCase().includes(tableFilters.grantedAmount.toLowerCase());
 
-      if (tableFilters.status !== undefined && tableFilters.status !== null && String(tableFilters.status) !== '') {
-        const searchStatus = String(tableFilters.status).toLowerCase()
-        filtered = filtered.filter((item) => String(item.status ?? '').toLowerCase().includes(searchStatus));
-      }
-    }
+      const matchesGrantedDate = !tableFilters.grantedDate || item.grantedDate?.toLowerCase().includes(tableFilters.grantedDate.toLowerCase());
+
+      const matchesStatus = !tableFilters.status || item.status?.toLowerCase().includes(tableFilters.status.toLowerCase());
+
+      return matchesProcessNumber && matchesDepartmentCode && matchesEmployee && matchesGrantedAmount && matchesGrantedDate && matchesStatus
+    })
   
     return filtered;
   }

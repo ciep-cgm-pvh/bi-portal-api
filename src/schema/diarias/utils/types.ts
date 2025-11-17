@@ -92,13 +92,14 @@ export interface DiariasFilters {
   departmentCode: string
   status: string
   processNumber: string
+  employee: string
 }
 
 export interface DiariasTableFilters {
   processNumber: string
   departmentCode: string
-  paymentDate: string
+  grantedDate: string
   employee: string
-  grantedValue: string
+  grantedAmount: string
   status: string
 }

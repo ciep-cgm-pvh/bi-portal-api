@@ -64,7 +64,6 @@ export function mapToProcessedTable(rows: Record<string, any>[]): Partial<Diaria
 
 export function mapDiariasFiltersToApiParams(
   filters?: Partial<DiariasFilters>,
-  tableFilters?: Partial<DiariasTableFilters>
 ): Record<string, string> {
   const params: Record<string, string> = {};
 
@@ -82,10 +81,10 @@ export function mapDiariasFiltersToApiParams(
     }
   };
 
-  // trocar nome do param depois que o filipe adicionar os filtros
-  addParam("cnoOrgao", mergeFilters.departmentCode);
+  addParam("secretaria", mergeFilters.departmentCode);
   addParam("status", mergeFilters.status);
-  addParam("nroProcesso", mergeFilters.processNumber);
+  addParam("funcionario", mergeFilters.employee);
+  addParam("nro_processo", mergeFilters.processNumber);
 
   return params;
 }

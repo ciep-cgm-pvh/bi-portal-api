@@ -39,9 +39,11 @@ export const diariasResolvers = () => ({
       return service.getCharts(filters)
     },
 
-    // getDiariasFiltersOptions(_: unknown, { filters }: { filters?: DiariasFilters }) {
-    //   return diariasService.getFilterOptions(filters)
-    // },
+    getDiariasFiltersOptions(_: unknown, { filters }: { filters?: DiariasFilters }, context: { diariasService: DiariasService }) {
+      const service = context.diariasService
+      if (!service) throw new Error("getDiariasFiltersOptions não inicializado");
+      return service.getFilterOptions(filters)
+    },
 
     getDiariasLastUpdate(_:unknown, args: any, context: { diariasService: DiariasService }) {
       const service = context.diariasService

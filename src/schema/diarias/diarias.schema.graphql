@@ -1,29 +1,31 @@
 scalar DateTime
 
 input DateRangeInput {
-  from: DateTime!
-  to: DateTime!
+  from: DateTime
+  to: DateTime
 }
 
 # Define o tipo para os filtros que podemos receber
 input DiariasFilters {
   dateRange: DateRangeInput
-  department: String!
-  status: String!
+  departmentCode: String
+  status: String
   processNumber: String
+  employee: String
 }
 
 input DiariasFiltersOptions {
   dateRange: DateRangeInput
-  department: String!
-  status: String!
+  departmentCode: String
+  status: String
   processNumber: String
+  employee: String
 }
 
 input DiariasTableFilters {
-  paymentDate: String
-  amountGranted: String
-  department: String
+  grantedDate: String
+  grantedAmount: String
+  departmentCode: String
   processNumber: String
   employee: String
   status: String
@@ -38,25 +40,25 @@ type KpiData {
 
 # Dados para o gráfico de Top Orgaos
 type GastoOrgaoDiaria {
-  name: String!
-  total: Float!
+  name: String
+  total: Float
 }
 
 type GastoFuncionarioDiaria {
-  name: String!
-  total: Float!
+  name: String
+  total: Float
 }
 
 # Dados para o gráfico de Gasto Mensal
-type GastoPlanoDespesaDiaria {
-  name: String!
-  total: Float!
+type GastoMesDiaria {
+  name: String
+  total: Float
 }
 
 type DiariasCharts {
-  GastoOrgaoDiaria: [GastoOrgaoDiaria]!
-  GastoFuncionarioDiaria: [GastoFuncionarioDiaria]!
-  GastoPlanoDespesaDiaria: [GastoPlanoDespesaDiaria]!
+  GastoOrgaoDiaria: [GastoOrgaoDiaria]
+  GastoFuncionarioDiaria: [GastoFuncionarioDiaria]
+  GastoMesDiaria: [GastoMesDiaria]
 }
 
 type Diarias {
@@ -120,9 +122,10 @@ type FilterOption {
 }
 
 type FilterOptionsDiaria {
-  department: [FilterOption!]
-  status: [FilterOption!]
-  processNumber: [FilterOption!]
+  departmentCode: [FilterOption]
+  status: [FilterOption]
+  processNumber: [FilterOption]
+  employee: [FilterOption]
 }
 
 # A Query principal
@@ -135,15 +138,15 @@ type Query {
     sortDirection: String
     filters: DiariasFilters
     tableFilters: DiariasTableFilters
-  ): [DiariaTable!]
+  ): [DiariaTable]
 
   getDiariasTableCount(
     filters: DiariasFilters
     tableFilters: DiariasTableFilters
-  ): Int!
+  ): Int
 
-  getDiariasLastUpdate: DateTime!
-  getDiariasKpi(filters: DiariasFilters): KpiData!
-  getDiariasCharts(filters: DiariasFilters): DiariasCharts!
-  getDiariasFiltersOptions(filters: DiariasFiltersOptions): FilterOptionsDiaria!
+  getDiariasLastUpdate: DateTime
+  getDiariasKpi(filters: DiariasFilters): KpiData
+  getDiariasCharts(filters: DiariasFilters): DiariasCharts
+  getDiariasFiltersOptions(filters: DiariasFiltersOptions): FilterOptionsDiaria
 }

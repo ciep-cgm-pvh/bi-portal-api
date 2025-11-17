@@ -1,8 +1,8 @@
 import { getDiariasData } from '../../data/loadDiarias';
+import { unificationMap } from '../../data/orgaoDictionary';
 import { Processor } from '../../utils/processor';
-import { mapFiltersToApiParams } from '../abastecimento/utils/mapToProcessed';
 import { DiariasProcessor } from './diariasProcessor';
-import { mapToProcessedAll, mapToProcessedTable} from './utils/mapToProcessed';
+import { mapDiariasFiltersToApiParams, mapToProcessedAll, mapToProcessedTable} from './utils/mapToProcessed';
 import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './utils/types';
 
 export class DiariasService {
@@ -18,36 +18,58 @@ export class DiariasService {
   }
 
   public async getDiarias(filters?: DiariasFilters): Promise<DiariaProcessed[]> {
-    const params = mapFiltersToApiParams(filters);
+    const params = mapDiariasFiltersToApiParams(filters);
     const data = await getDiariasData("all", params);
-    // console.log("diarias: ", data[1])
     return mapToProcessedAll(data);
   }
 
   public async getDiariasTableData(
-      limit?: number,
-      offset?: number,
-      sortBy?: string,
-      sortDirection?: any,
-      filters?: DiariasFilters,
-    tableFilters?: DiariasTableFilters): Promise<Partial<DiariaProcessed>[]>  {
-    const params = mapFiltersToApiParams(filters);
+    limit?: number,
+    offset?: number,
+    sortBy?: string,
+    sortDirection?: any,
+    filters?: DiariasFilters,
+    tableFilters?: DiariasTableFilters
+  ): Promise<DiariaProcessed[]> {
+    if (filters?.departmentCode) {
+      for (const [ fullName, sigla ] of unificationMap.entries()) {
+        if (sigla === filters.departmentCode) {
+          filters.departmentCode = fullName;
+          break;
+        }
+      }
+    }
+
+    const params = mapDiariasFiltersToApiParams(filters);
     let data = await getDiariasData("table_data", params);
-    
-    data = DiariasProcessor.applyTableFilters(data, tableFilters)
-    
-    data = Processor.sortData(data, sortBy, (sortDirection || "ascending"))
-    if (typeof offset === 'number' && typeof limit === 'number') {
+
+    if (!Array.isArray(data)) {
+      console.error("getDiariasData returned non-array:", data);
+      data = [];
+    }
+
+    data = mapToProcessedTable(data);
+    data = Processor.sortData(data, sortBy, sortDirection || "ascending");
+
+    if (typeof offset === "number" && typeof limit === "number") {
       data = data.slice(offset, offset + limit);
     }
-    data = mapToProcessedTable(data)
-    // console.log("diariasTable: ", mapToProcessedTable(data)[1])
-    return data;
+
+    const unifiedData = data.map((item: any) => {
+      const sigla = unificationMap.get(item.departmentCode);
+      return {
+        ...item,
+        departmentCode: sigla || item.departmentCode,
+      };
+    });
+
+    const processedData = DiariasProcessor.applyTableFilters(unifiedData, tableFilters);
+
+    return processedData;
   }
 
   public async getDiariasTableCount(filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
-    // ajustar no bi-portal-data, pois só esta mandando os 1000 primeiros dados
-    const params = mapFiltersToApiParams(filters);
+    const params = mapDiariasFiltersToApiParams(filters);
     let data = await getDiariasData("table_data", params);
     data = DiariasProcessor.applyTableFilters(data, tableFilters)
     return data.length;
@@ -59,7 +81,7 @@ export class DiariasService {
   }
 
   public async getKpi(filters?: DiariasFilters) {
-    const params = mapFiltersToApiParams(filters);
+    const params = mapDiariasFiltersToApiParams(filters);
     const data = await getDiariasData("kpis/gerais", params);
 
     const totalConcedido = data.resultados.total_concedido
@@ -73,80 +95,54 @@ export class DiariasService {
   }
 
   public async getCharts(filters?: DiariasFilters) {
-    const params = mapFiltersToApiParams(filters);
+    const params = mapDiariasFiltersToApiParams(filters);
     const data1 = await getDiariasData("dashboard/gastos_por_entidade", params);
-    const data2 = await getDiariasData("dashboard/gastos_por_plano_despesa", params);
+    const data2 = await getDiariasData("dashboard/gasto_por_mes", params);
     const data3 = await getDiariasData("dashboard/gastos_por_funcionario", params);
-
-    const GastoOrgaoDiaria = data1.resultados.map((item: any) => ({
-      name: item.nomEntidade,
-      total: item.TotalGasto,
-    }));
-    const GastoPlanoDespesaDiaria = data2.resultados.map((item: any) => ({
-      name: item.nomEntidade,
+    
+    const GastoOrgaoDiaria = data1.resultados.map((item: any) => {
+      const sigla = unificationMap.get(item.cnoOrgao);
+      return {
+        name: sigla || item.cnoOrgao, 
+        total: item.TotalGasto,
+      };
+    });
+    const GastoMesDiaria = data2.resultados.map((item: any) => ({
+      name: item.MesReferencia,
       total: item.TotalGasto,
     }));
     const GastoFuncionarioDiaria = data3.resultados.map((item: any) => ({
       name: item.funcionario,
       total: item.TotalGasto,
     }));
-    console.log(data3)
 
     return {
-      GastoPlanoDespesaDiaria,
+      GastoOrgaoDiaria,
+      GastoMesDiaria,
       GastoFuncionarioDiaria,
-      GastoOrgaoDiaria
     }
   }
 
-  // public getFilterOptions(filters?: DiariasFilters) {
-  //   const allData = this.getDiariasData();
+  public async getFilterOptions(filters?: DiariasFilters) {
+    const params = mapDiariasFiltersToApiParams(filters);
+    let data = await getDiariasData("filterOptions", params);
 
-  //   const mapToFilterType = (arr: (string | undefined | null)[]) =>
-  //     Array.from(new Set(arr.filter(Boolean))).sort()
-  //       .map(value => ({ value: value!, label: value! }));
+    const employee = data.funcionarioOptions
+    const processNumber = data.nroProcessoOptions
+    const status = data.statusOptions
+    const departmentCode = data.secretariaOptions.map((item: any) => {
+      const sigla = unificationMap.get(item.value);
+      return {
+        ...item,
+        value: sigla || item.value,
+      }
+    });
 
-  //   // 1. Filtra dados com base em TODOS os filtros ativos
-  //   let filtered = allData;
-
-  //   if (filters?.dateRange?.from) {
-  //     const fromDate = new Date(filters.dateRange.from);
-  //     filtered = filtered.filter(item => {
-  //       const itemDate = new Date(item.paymentDate);
-  //       return itemDate !== null && itemDate >= fromDate;
-  //     });
-  //   }
-  //   if (filters?.dateRange?.to) {
-  //     const toDate = new Date(filters.dateRange.to);
-  //     filtered = filtered.filter(item => {
-  //       const itemDate = new Date(item.paymentDate);
-  //       return itemDate !== null && itemDate <= toDate;
-  //     });
-  //   }
-
-  //   if (filters?.department) {
-  //     const departments = Array.isArray(filters.department)
-  //       ? filters.department.map(d => String(d).toLowerCase())
-  //       : [ String(filters.department).toLowerCase() ];
-
-  //     filtered = filtered.filter(item =>
-  //       departments.includes(String(item.department ?? '').toLowerCase())
-  //     );
-  //   }
-
-  //   if (filters?.status) {
-  //     filtered = filtered.filter(item => item.processNumber.toLowerCase() === filters.status.toLowerCase());
-  //   }
-
-  //   // 2. Gera as opções dinamicamente a partir do dataset já filtrado
-  //   const departmentOptions = mapToFilterType(filtered.map(item => item.department));
-  //   const processNumberOptions = mapToFilterType(filtered.map(item => item.processNumber));
-  //   const statusOptions = mapToFilterType(filtered.map(item => item.status));
-
-  //   return {
-  //     department: departmentOptions,
-  //     processNumber: processNumberOptions,
-  //     status: statusOptions,
-  //   };
-  // }
+    return {
+      employee,
+      processNumber,
+      status,
+      departmentCode,
+    };
+  }
 }
