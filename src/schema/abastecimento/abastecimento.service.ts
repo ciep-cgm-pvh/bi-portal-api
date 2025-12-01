@@ -37,7 +37,6 @@ export class AbastecimentoService {
   ): Promise<AbastecimentoProcessed[]> {
     const globalParams = mapFiltersToApiParams(filters);
     const response = await getAbastecimentoData("table_data", globalParams);
-
     let processed = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(response));
 
     if (tableFilters) {

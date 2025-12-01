@@ -116,6 +116,11 @@ type DiariaTable {
   status: String
 }
 
+type DiariasTableResponse {
+  data: [DiariaTable]
+  totalCount: Int!
+}
+
 type FilterOption {
   value: String
   label: String
@@ -138,12 +143,7 @@ type Query {
     sortDirection: String
     filters: DiariasFilters
     tableFilters: DiariasTableFilters
-  ): [DiariaTable]
-
-  getDiariasTableCount(
-    filters: DiariasFilters
-    tableFilters: DiariasTableFilters
-  ): Int
+  ): DiariasTableResponse
 
   getDiariasLastUpdate: DateTime
   getDiariasKpi(filters: DiariasFilters): KpiData

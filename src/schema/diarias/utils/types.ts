@@ -87,6 +87,11 @@ export interface DiariaProcessed {
   status: string;
 }
 
+export interface PaginatedDiariasResponse {
+  data: DiariaProcessed[];
+  totalCount: number;
+}
+
 export interface DiariasFilters {
   dateRange: { from: string; to: string; }
   departmentCode: string

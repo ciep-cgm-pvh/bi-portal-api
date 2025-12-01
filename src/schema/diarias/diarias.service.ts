@@ -1,9 +1,8 @@
 import { getDiariasData } from '../../data/loadDiarias';
 import { unificationMap } from '../../data/orgaoDictionary';
 import { Processor } from '../../utils/processor';
-import { DiariasProcessor } from './diariasProcessor';
 import { mapDiariasFiltersToApiParams, mapToProcessedAll, mapToProcessedTable} from './utils/mapToProcessed';
-import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './utils/types';
+import { DiariaProcessed, DiariasFilters, DiariasTableFilters, PaginatedDiariasResponse } from './utils/types';
 
 export class DiariasService {
   private rawData: any[];
@@ -30,11 +29,11 @@ export class DiariasService {
     sortDirection?: any,
     filters?: DiariasFilters,
     tableFilters?: DiariasTableFilters
-  ): Promise<DiariaProcessed[]> {
+  ): Promise<PaginatedDiariasResponse> {
     if (filters?.departmentCode) {
-      for (const [ fullName, sigla ] of unificationMap.entries()) {
-        if (sigla === filters.departmentCode) {
-          filters.departmentCode = fullName;
+      for (const [ sigla, codigos ] of unificationMap.entries()) {
+        if (codigos.includes(filters.departmentCode)) {
+          filters.departmentCode = sigla;
           break;
         }
       }
@@ -49,13 +48,9 @@ export class DiariasService {
     }
 
     data = mapToProcessedTable(data);
-    data = Processor.sortData(data, sortBy, sortDirection || "ascending");
+    let totalCount = data.length;
 
-    if (typeof offset === "number" && typeof limit === "number") {
-      data = data.slice(offset, offset + limit);
-    }
-
-    const unifiedData = data.map((item: any) => {
+    let processedData = data.map((item: any) => {
       const sigla = unificationMap.get(item.departmentCode);
       return {
         ...item,
@@ -63,21 +58,34 @@ export class DiariasService {
       };
     });
 
-    const processedData = DiariasProcessor.applyTableFilters(unifiedData, tableFilters);
+    if (tableFilters) {
+      processedData = processedData.filter((item: any) => {
+        const matchesEmployee = !tableFilters.employee || item.employee?.toLowerCase().includes(tableFilters.employee.toLowerCase());
+        const matchesDepartment = !tableFilters.departmentCode || item.departmentCode.toLowerCase().includes(tableFilters.departmentCode.toLowerCase());
+        const matchesGrantedAmount = !tableFilters.grantedAmount || String(item.grantedAmount)?.includes(tableFilters.grantedAmount.toLowerCase());
+        const matchesGrantedDate = !tableFilters.grantedDate || item.grantedDate?.toLowerCase().includes(tableFilters.grantedDate.toLowerCase());
+        const matchesProcessNumber = !tableFilters.processNumber || item.processNumber?.toLowerCase().includes(tableFilters.processNumber.toLowerCase());
+        const matchesStatus = !tableFilters.status || item.status?.toString().includes(tableFilters.status[0].toLowerCase());
+        return matchesEmployee && matchesDepartment && matchesGrantedAmount && matchesGrantedDate && matchesProcessNumber && matchesStatus;
+      });
+    }
 
-    return processedData;
-  }
+    processedData = Processor.sortData(processedData, sortBy, sortDirection || "ascending");
+    totalCount = processedData.length;
 
-  public async getDiariasTableCount(filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
-    const params = mapDiariasFiltersToApiParams(filters);
-    let data = await getDiariasData("table_data", params);
-    data = DiariasProcessor.applyTableFilters(data, tableFilters)
-    return data.length;
+    if (typeof offset === "number" && typeof limit === "number") {
+      processedData = processedData.slice(offset, offset + limit);
+    }
+
+    return {
+      data: processedData,
+      totalCount,
+    };
   }
 
   public async getDiariasLastUpdate() {
     const lastUpdate = await getDiariasData("kpi/last_update")
-    return lastUpdate
+    return lastUpdate.last_update;
   }
 
   public async getKpi(filters?: DiariasFilters) {
@@ -97,24 +105,34 @@ export class DiariasService {
   public async getCharts(filters?: DiariasFilters) {
     const params = mapDiariasFiltersToApiParams(filters);
     const data1 = await getDiariasData("dashboard/gastos_por_entidade", params);
-    const data2 = await getDiariasData("dashboard/gasto_por_mes", params);
-    const data3 = await getDiariasData("dashboard/gastos_por_funcionario", params);
+    const data2 = await getDiariasData("dashboard/gastos_por_funcionario", params);
+    const data3 = await getDiariasData("dashboard/gasto_por_mes", params);
     
-    const GastoOrgaoDiaria = data1.resultados.map((item: any) => {
-      const sigla = unificationMap.get(item.cnoOrgao);
-      return {
-        name: sigla || item.cnoOrgao, 
+    const GastoOrgaoDiaria = (
+      data1.resultados.map((item: any) => {
+        const sigla = unificationMap.get(item.cnoOrgao);
+        return {
+          name: sigla || item.cnoOrgao,
+          total: Number(item.TotalGasto),
+        };
+      })
+    );
+
+    const GastoFuncionarioDiaria = 
+      data2.resultados.map((item: any) => ({
+        name: item.funcionario,
         total: item.TotalGasto,
-      };
-    });
-    const GastoMesDiaria = data2.resultados.map((item: any) => ({
-      name: item.MesReferencia,
-      total: item.TotalGasto,
-    }));
-    const GastoFuncionarioDiaria = data3.resultados.map((item: any) => ({
-      name: item.funcionario,
-      total: item.TotalGasto,
-    }));
+      })
+    );
+
+    const GastoMesDiaria = Processor.groupTop9WithOthers(
+      data3.resultados
+        .map((item: any) => ({
+          name: Processor.formatYearMonth(item.MesReferencia),
+          total: item.TotalGasto,
+        }))
+    );
+
 
     return {
       GastoOrgaoDiaria,
@@ -130,13 +148,15 @@ export class DiariasService {
     const employee = data.funcionarioOptions
     const processNumber = data.nroProcessoOptions
     const status = data.statusOptions
-    const departmentCode = data.secretariaOptions.map((item: any) => {
-      const sigla = unificationMap.get(item.value);
-      return {
-        ...item,
-        value: sigla || item.value,
-      }
-    });
+    const departmentCode = data.secretariaOptions
+    // const departmentCode = data.secretariaOptions.map((item: any) => {
+    //   const sigla = unificationMap.get(item.value);
+    //   console.log(sigla, ": ", item.value)
+    //   return {
+    //     ...item,
+    //     label: sigla || item.value,
+    //   }
+    // });
 
     return {
       employee,

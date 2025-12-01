@@ -1,5 +1,4 @@
 // src/utils/AbastecimentoProcessor.ts
-import { unificationMap } from '../../data/orgaoDictionary';
 import { Processor } from '../../utils/processor';
 import { ProcessedAbastecimentoRow } from './utils/types';
 

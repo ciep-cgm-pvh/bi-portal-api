@@ -21,12 +21,6 @@ export const diariasResolvers = () => ({
         args.tableFilters)
     },
 
-    getDiariasTableCount(_: unknown, args: any, context: { diariasService: DiariasService }) {
-      const service = context.diariasService
-      if (!service) throw new Error("getDiariasTableCount não inicializado");
-      return service.getDiariasTableCount(args.filters, args.tableFilters)
-    },
-
     getDiariasKpi(_: unknown, { filters }: { filters?: DiariasFilters }, context: { diariasService: DiariasService }) {
       const service = context.diariasService
       if (!service) throw new Error("getDiariasKpi não inicializado");
