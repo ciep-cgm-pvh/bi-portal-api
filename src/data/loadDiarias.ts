@@ -11,7 +11,7 @@ import * as XLSX from 'xlsx';
 
 import axios from "axios";
 
-const BASE_URL = "https://bi-portal-data.vercel.app/api/diarias";
+const BASE_URL = "http://127.0.0.1:5000/api/diarias";
 
 export async function getDiariasData(path: string, filters?: Record<string, any>) {
   try {
