@@ -57,7 +57,7 @@ export function mapToProcessedTable(rows: Record<string, any>[]): Partial<Diaria
     processNumber: row[ "nroProcesso" ],
     employee: row[ "funcionario" ],
     grantedAmount: row[ "vlrConcedido" ],
-    grantedDate: row[ "dtAprovado" ],
+    grantedDate: row[ "Status" ] == "Aprovado/Pago" ? row[ "dtAprovado" ] : row[ "Status" ] == "Cancelado" ? row[ "dtCancelado" ] : row[ "dtAprovar" ],
     status: row["Status"],
   }));
 }

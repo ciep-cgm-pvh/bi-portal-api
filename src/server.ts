@@ -34,8 +34,7 @@ export async function buildServer() {
     allowedHeaders: [ 'Content-Type', 'Authorization' ],
   });
 
-  // Rate Limit só em dev local (não serverless)
-  if (isDev && !isVercel) {
+  if (!isDev && isVercel) {
     await app.register(fastifyRateLimit, {
       max: 50,
       timeWindow: '1 minute',

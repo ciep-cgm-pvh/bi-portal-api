@@ -1,8 +1,7 @@
 import { getDiariasData } from '../../data/loadDiarias';
-import { unificationMap } from '../../data/orgaoDictionary';
 import { Processor } from '../../utils/processor';
-import { mapDiariasFiltersToApiParams, mapToProcessedAll, mapToProcessedTable} from './utils/mapToProcessed';
-import { DiariaProcessed, DiariasFilters, DiariasTableFilters, PaginatedDiariasResponse } from './utils/types';
+import { mapDiariasFiltersToApiParams, mapToProcessedTable} from './utils/mapToProcessed';
+import { Diarias, DiariasFilters, DiariasTableFilters, PaginatedDiariasResponse } from './utils/types';
 
 export class DiariasService {
   private rawData: any[];
@@ -16,10 +15,10 @@ export class DiariasService {
     return new DiariasService(rawData);
   }
 
-  public async getDiarias(filters?: DiariasFilters): Promise<DiariaProcessed[]> {
+  public async getDiarias(filters?: DiariasFilters): Promise<Diarias[]> {
     const params = mapDiariasFiltersToApiParams(filters);
     const data = await getDiariasData("all", params);
-    return mapToProcessedAll(data);
+    return data;
   }
 
   public async getDiariasTableData(
@@ -30,15 +29,6 @@ export class DiariasService {
     filters?: DiariasFilters,
     tableFilters?: DiariasTableFilters
   ): Promise<PaginatedDiariasResponse> {
-    if (filters?.departmentCode) {
-      for (const [ sigla, codigos ] of unificationMap.entries()) {
-        if (codigos.includes(filters.departmentCode)) {
-          filters.departmentCode = sigla;
-          break;
-        }
-      }
-    }
-
     const params = mapDiariasFiltersToApiParams(filters);
     let data = await getDiariasData("table_data", params);
 
@@ -50,16 +40,8 @@ export class DiariasService {
     data = mapToProcessedTable(data);
     let totalCount = data.length;
 
-    let processedData = data.map((item: any) => {
-      const sigla = unificationMap.get(item.departmentCode);
-      return {
-        ...item,
-        departmentCode: sigla || item.departmentCode,
-      };
-    });
-
     if (tableFilters) {
-      processedData = processedData.filter((item: any) => {
+      data = data.filter((item: any) => {
         const matchesEmployee = !tableFilters.employee || item.employee?.toLowerCase().includes(tableFilters.employee.toLowerCase());
         const matchesDepartment = !tableFilters.departmentCode || item.departmentCode.toLowerCase().includes(tableFilters.departmentCode.toLowerCase());
         const matchesGrantedAmount = !tableFilters.grantedAmount || String(item.grantedAmount)?.includes(tableFilters.grantedAmount.toLowerCase());
@@ -70,15 +52,15 @@ export class DiariasService {
       });
     }
 
-    processedData = Processor.sortData(processedData, sortBy, sortDirection || "ascending");
-    totalCount = processedData.length;
+    data = Processor.sortData(data, sortBy, sortDirection || "ascending");
+    totalCount = data.length;
 
     if (typeof offset === "number" && typeof limit === "number") {
-      processedData = processedData.slice(offset, offset + limit);
+      data = data.slice(offset, offset + limit);
     }
 
     return {
-      data: processedData,
+      data,
       totalCount,
     };
   }
@@ -110,9 +92,8 @@ export class DiariasService {
     
     const GastoOrgaoDiaria = (
       data1.resultados.map((item: any) => {
-        const sigla = unificationMap.get(item.cnoOrgao);
         return {
-          name: sigla || item.cnoOrgao,
+          name: item.cnoOrgao,
           total: Number(item.TotalGasto),
         };
       })
@@ -144,19 +125,10 @@ export class DiariasService {
   public async getFilterOptions(filters?: DiariasFilters) {
     const params = mapDiariasFiltersToApiParams(filters);
     let data = await getDiariasData("filterOptions", params);
-
     const employee = data.funcionarioOptions
     const processNumber = data.nroProcessoOptions
     const status = data.statusOptions
     const departmentCode = data.secretariaOptions
-    // const departmentCode = data.secretariaOptions.map((item: any) => {
-    //   const sigla = unificationMap.get(item.value);
-    //   console.log(sigla, ": ", item.value)
-    //   return {
-    //     ...item,
-    //     label: sigla || item.value,
-    //   }
-    // });
 
     return {
       employee,
