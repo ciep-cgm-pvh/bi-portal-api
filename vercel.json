@@ -16,7 +16,7 @@
       "src": "/graphql",
       "methods": ["OPTIONS"],
       "headers": {
-        "Access-Control-Allow-Origin": "https://bi-portal-frontend-developer.vercel.app",
+        "Access-Control-Allow-Origin": "https://paineis-cgm.vercel.app",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Allow-Credentials": "true"
@@ -27,7 +27,7 @@
       "src": "/graphql",
       "methods": ["GET", "POST"],
       "headers": {
-        "Access-Control-Allow-Origin": "https://bi-portal-frontend-developer.vercel.app",
+        "Access-Control-Allow-Origin": "https://paineis-cgm.vercel.app",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Allow-Credentials": "true"
