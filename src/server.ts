@@ -12,7 +12,7 @@ import { DiariasService } from './schema/diarias/diarias.service';
 dotenv.config();
 
 export async function buildServer() {
-  const isDev = process.env.NODE_ENV !== 'production';
+  const isDev = process.env.NODE_ENV !== 'PRODUCTION';
   const isVercel = process.env.VERCEL === '1';
 
   const app = Fastify({
@@ -31,7 +31,6 @@ export async function buildServer() {
     origin: allowedOrigins,
     credentials: true,
     methods: [ 'GET', 'POST', 'OPTIONS' ],
-    allowedHeaders: [ 'Content-Type', 'Authorization' ],
   });
 
   if (!isDev && isVercel) {

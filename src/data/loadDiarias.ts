@@ -32,7 +32,7 @@ export async function getDiariasData(path: string, filters?: Record<string, any>
 
 function buildQueryParams(params: Record<string, any>) {
   const query = Object.entries(params)
-    .filter(([ _, value ]) => value !== undefined && value !== null && value !== "")
+    .filter(([ _, value ]) => value !== undefined && value !== null)
     .map(([ key, value ]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join("&");
 

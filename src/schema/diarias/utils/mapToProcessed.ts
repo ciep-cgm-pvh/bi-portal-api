@@ -82,8 +82,8 @@ export function mapDiariasFiltersToApiParams(
   };
 
   addParam("secretaria", mergeFilters.departmentCode);
-  addParam("status", mergeFilters.status);
   addParam("funcionario", mergeFilters.employee);
+  addParam("status", mergeFilters.status);
   addParam("nro_processo", mergeFilters.processNumber);
 
   return params;

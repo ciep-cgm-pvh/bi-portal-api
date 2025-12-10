@@ -122,19 +122,53 @@ export class DiariasService {
     }
   }
 
-  public async getFilterOptions(filters?: DiariasFilters) {
-    const params = mapDiariasFiltersToApiParams(filters);
-    let data = await getDiariasData("filterOptions", params);
-    const employee = data.funcionarioOptions
-    const processNumber = data.nroProcessoOptions
-    const status = data.statusOptions
-    const departmentCode = data.secretariaOptions
+  // public async getFilterOptions(filters?: DiariasFilters) {
+  //   const params = mapDiariasFiltersToApiParams(filters);
+  //   let data = await getDiariasData("filterOptions", params);
+  //   const employee = data.funcionarioOptions
+  //   const processNumber = data.nroProcessoOptions
+  //   const status = data.statusOptions
+  //   const departmentCode = data.secretariaOptions
 
+  //   return {
+  //     employee,
+  //     processNumber,
+  //     status,
+  //     departmentCode,
+  //   };
+  // }
+  public async getFilterOptions(filters?: DiariasFilters) {
+    // Garante que allParams seja um objeto, mesmo que mapDiariasFiltersToApiParams retorne undefined
+    const allParams = mapDiariasFiltersToApiParams(filters) || {};
+    
+    // Define os filtros que queremos popular e suas chaves de parâmetro
+    const filterMap = {
+      secretaria: "departmentCode",
+      nroProcesso: "processNumber",
+      funcionario: "employee",
+      status: "status",
+    };
+    
+    const results: any = {};
+    
+    // Itera sobre cada filtro para buscar suas opções (LÓGICA DE CASCATA)
+    for (const [ paramKey, filterKey ] of Object.entries(filterMap)) {
+      
+      const paramsForCurrentFilter = { ...allParams };
+      delete paramsForCurrentFilter[ paramKey ]; // <--- EXCLUSÃO DO FILTRO ATUAL
+      
+      const data = await getDiariasData("filterOptions", paramsForCurrentFilter);
+
+      const responseKey = `${paramKey}Options`;
+      results[ responseKey ] = data[ responseKey ];
+    }
+
+    // Mapeia as chaves de resposta para o formato GraphQL
     return {
-      employee,
-      processNumber,
-      status,
-      departmentCode,
+      employee: results[ "funcionarioOptions" ],
+      processNumber: results[ "nroProcessoOptions" ],
+      status: results[ "statusOptions" ],
+      departmentCode: results[ "secretariaOptions" ],
     };
   }
 }
