@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://127.0.0.1:5000/api/abastecimento";
+const BASE_URL = "http://bi-portal-data.vercel.app/api/abastecimento";
 
 export async function getAbastecimentoData(path: string, filters?: Record<string, any>) {
   try {
