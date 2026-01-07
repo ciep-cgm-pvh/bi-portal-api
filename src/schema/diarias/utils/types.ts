@@ -103,7 +103,7 @@ export interface DiariasFilters {
 export interface DiariasTableFilters {
   processNumber: string
   departmentCode: string
-  grantedDate: string
+  approvalDate: string
   employee: string
   grantedAmount: string
   status: string

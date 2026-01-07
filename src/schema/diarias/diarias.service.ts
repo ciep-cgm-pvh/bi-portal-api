@@ -31,12 +31,7 @@ export class DiariasService {
   ): Promise<PaginatedDiariasResponse> {
     const params = mapDiariasFiltersToApiParams(filters);
     let data = await getDiariasData("table_data", params);
-
-    if (!Array.isArray(data)) {
-      console.error("getDiariasData returned non-array:", data);
-      data = [];
-    }
-
+    
     data = mapToProcessedTable(data);
     let totalCount = data.length;
 
@@ -45,10 +40,10 @@ export class DiariasService {
         const matchesEmployee = !tableFilters.employee || item.employee?.toLowerCase().includes(tableFilters.employee.toLowerCase());
         const matchesDepartment = !tableFilters.departmentCode || item.departmentCode.toLowerCase().includes(tableFilters.departmentCode.toLowerCase());
         const matchesGrantedAmount = !tableFilters.grantedAmount || String(item.grantedAmount)?.includes(tableFilters.grantedAmount.toLowerCase());
-        const matchesGrantedDate = !tableFilters.grantedDate || item.grantedDate?.toLowerCase().includes(tableFilters.grantedDate.toLowerCase());
+        const matchesApprovalDate = !tableFilters.approvalDate || item.approvalDate?.toString().toLowerCase().includes(tableFilters.approvalDate.toLowerCase());
         const matchesProcessNumber = !tableFilters.processNumber || item.processNumber?.toLowerCase().includes(tableFilters.processNumber.toLowerCase());
-        const matchesStatus = !tableFilters.status || item.status?.toString().includes(tableFilters.status[0].toLowerCase());
-        return matchesEmployee && matchesDepartment && matchesGrantedAmount && matchesGrantedDate && matchesProcessNumber && matchesStatus;
+        const matchesStatus = !tableFilters.status || item.status?.toString().toLowerCase().includes(tableFilters.status.toLowerCase());
+        return matchesEmployee && matchesDepartment && matchesGrantedAmount && matchesApprovalDate && matchesProcessNumber && matchesStatus;
       });
     }
 

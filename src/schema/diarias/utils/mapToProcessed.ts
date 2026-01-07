@@ -1,4 +1,4 @@
-import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './types';
+import { DiariaProcessed, DiariasFilters } from './types';
 
 function getDiariaStatus(row: any): string {
   return "Indefinido"
@@ -52,15 +52,21 @@ export function mapToProcessedAll(rows: Record<string, any>[]): DiariaProcessed[
 }
 
 export function mapToProcessedTable(rows: Record<string, any>[]): Partial<DiariaProcessed>[] {
-  return rows.map(row => ({
-    departmentCode: row[ "cnoOrgao" ],
-    processNumber: row[ "nroProcesso" ],
-    employee: row[ "funcionario" ],
-    grantedAmount: row[ "vlrConcedido" ],
-    grantedDate: row[ "Status" ] == "Aprovado/Pago" ? row[ "dtAprovado" ] : row[ "Status" ] == "Cancelado" ? row[ "dtCancelado" ] : row[ "dtAprovar" ],
-    status: row["Status"],
-  }));
+  return rows.map(row => {
+    // console.log('ROW KEYS:', Object.keys(row));
+    // console.log('ROW:', row);
+
+    return {
+      departmentCode: row[ "cnoOrgao" ],
+      processNumber: row[ "nroProcesso" ],
+      employee: row[ "funcionario" ],
+      grantedAmount: row[ "vlrConcedido" ],
+      approvalDate: row[ "dtAprovar" ],
+      status: row[ "Status" ],
+    };
+  });
 }
+
 
 export function mapDiariasFiltersToApiParams(
   filters?: Partial<DiariasFilters>,

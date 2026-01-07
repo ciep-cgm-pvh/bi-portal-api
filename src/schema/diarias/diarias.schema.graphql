@@ -23,7 +23,7 @@ input DiariasFiltersOptions {
 }
 
 input DiariasTableFilters {
-  grantedDate: String
+  approvalDate: String
   grantedAmount: String
   departmentCode: String
   processNumber: String
@@ -111,7 +111,7 @@ type DiariaTable {
   processNumber: String
   employee: String
   grantedAmount: Float
-  grantedDate: String
+  approvalDate: String
   status: String
 }
 
