@@ -7,10 +7,10 @@ export const DiariasProcessor = {
         const matchesEmployee = !tableFilters.employee || item.employee?.toLowerCase().includes(tableFilters.employee.toLowerCase());
         const matchesDepartment = !tableFilters.departmentCode || item.departmentCode.toLowerCase().includes(tableFilters.departmentCode.toLowerCase());
         const matchesGrantedAmount = !tableFilters.grantedAmount || String(item.grantedAmount)?.includes(tableFilters.grantedAmount.toLowerCase());
-        const matchesGrantedDate = !tableFilters.grantedDate || item.grantedDate?.toLowerCase().includes(tableFilters.grantedDate.toLowerCase());
+        const matchesrequestDate = !tableFilters.requestDate || item.requestDate?.toLowerCase().includes(tableFilters.requestDate.toLowerCase());
         const matchesProcessNumber = !tableFilters.processNumber || item.processNumber?.toLowerCase().includes(tableFilters.processNumber.toLowerCase());
         const matchesStatus = !tableFilters.status || item.status?.toString().includes(tableFilters.status[ 0 ].toLowerCase());
-        return matchesEmployee && matchesDepartment && matchesGrantedAmount && matchesGrantedDate && matchesProcessNumber && matchesStatus;
+        return matchesEmployee && matchesDepartment && matchesGrantedAmount && matchesrequestDate && matchesProcessNumber && matchesStatus;
       });
     }
   
