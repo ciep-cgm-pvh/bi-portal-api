@@ -156,7 +156,31 @@ export const Processor = {
     return `${yyyy}-${mm}-${dd}`;
   },
 
+  formatYearMonth(value?: string): string | undefined  {
+    if (!value) return undefined;
+    const [ year, month ] = value.split("-");
+    if (!year || !month) return undefined;
+    return `${month}/${year}`;
+  },
+
   // ----------- Processamento Genérico -----------
+
+  groupTop9WithOthers(arr: { name: string; total: number }[]) {
+    if (!Array.isArray(arr) || arr.length === 0) return [];
+    if (arr.length <= 10) return arr;
+
+    const cutoff = arr.length - 9; 
+    const rest = arr.slice(0, cutoff);
+    const top9 = arr.slice(cutoff);
+
+    return [
+      {
+        name: "Outros",
+        total: rest.reduce((acc, item) => acc + item.total, 0),
+      },
+      ...top9,
+    ];
+  },
 
   // Processa uma linha individual
   processRow(row: Record<string, string | number | null>): ProcessedRow {

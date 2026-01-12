@@ -37,10 +37,8 @@ export class AbastecimentoService {
   ): Promise<AbastecimentoProcessed[]> {
     const globalParams = mapFiltersToApiParams(filters);
     const response = await getAbastecimentoData("table_data", globalParams);
-
     let processed = mapToProcessed(AbastecimentoProcessor.processAbastecimentoData(response));
 
-    console.log(tableFilters?.fuelType)
     if (tableFilters) {
       processed = processed.filter(item => {
         const matchesPlate = !tableFilters.vehiclePlate || item.vehicle.plate?.toLowerCase().includes(tableFilters.vehiclePlate.toLowerCase());
@@ -190,8 +188,6 @@ export class AbastecimentoService {
 
   public async getVehicleSummary() {
     const data = await this.getAbastecimentos();
-
-    // Agrupar por veículo + departamento
     const summaryMap: Record<string, { vehicle: any; department: string; totalCost: number; supplyCount: number }> = {};
 
     data.forEach(item => {
@@ -239,53 +235,6 @@ export class AbastecimentoService {
       gasStationNameOptions
     };
   }
-
-  // public async FilterOptions(filters?: AbastecimentoFilters) {
-  //   let filtered = await this.getAbastecimentos(filters);
-
-  //   if (filters?.dateRange?.from) {
-  //     const fromDate = new Date(filters.dateRange.from);
-  //     filtered = filtered.filter(item => {
-  //       const itemDate = new Date(item.datetime);
-  //       return itemDate !== null && itemDate >= fromDate;
-  //     });
-  //   }
-  //   if (filters?.dateRange?.to) {
-  //     const toDate = new Date(filters.dateRange.to);
-  //     filtered = filtered.filter(item => {
-  //       const itemDate = new Date(item.datetime);
-  //       return itemDate !== null && itemDate <= toDate;
-  //     });
-  //   }
-
-  //   if (filters?.department) {
-  //     filtered = filtered.filter(item => item.department === filters.department);
-  //   }
-
-  //   if (filters?.vehiclePlate) {
-  //     filtered = filtered.filter(item => item.vehicle?.plate === filters.vehiclePlate);
-  //   }
-
-  //   if (filters?.vehicleModel) {
-  //     filtered = filtered.filter(item => item.vehicle?.model === filters.vehicleModel);
-  //   }
-
-  //   if (filters?.gasStationCity) {
-  //     filtered = filtered.filter(item => item.gasStation?.city === filters.gasStationCity);
-  //   }
-
-  //   if (filters?.gasStationName) {
-  //     filtered = filtered.filter(item => item.gasStation?.name === filters.gasStationName);
-  //   }
-
-  //   return {
-  //     orgao: [ ...new Set(filtered.map(item => item.department).filter(Boolean)) ].sort(),
-  //     placa: [ ...new Set(filtered.map(item => item.vehicle?.plate).filter(Boolean)) ].sort(),
-  //     modelo: [ ...new Set(filtered.map(item => item.vehicle?.model).filter(Boolean)) ].sort(),
-  //     cidadePosto: [ ...new Set(filtered.map(item => item.gasStation?.city).filter(Boolean)) ].sort(),
-  //     nomePosto: [ ...new Set(filtered.map(item => item.gasStation?.name).filter(Boolean)) ].sort(),
-  //   };
-  // }
 
   getColumns() {
     return [

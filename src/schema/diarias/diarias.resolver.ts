@@ -1,16 +1,18 @@
 import { DiariasService } from './diarias.service';
 import { DiariasFilters } from './utils/types';
 
-const diariasService = new DiariasService()
-
 export const diariasResolvers = () => ({
   Query: {
-    getDiarias: (_: unknown, { filters }: { filters?: DiariasFilters }) => {
-      return diariasService.getDiariasData(filters)
+    getDiarias: async (_: unknown, { filters }: { filters?: DiariasFilters }, context: {diariasService: DiariasService}) => {
+      const service = context.diariasService
+      if(!service) throw new Error("getDiarias não inicializado");
+      return await service.getDiarias(filters)
     },
 
-    getDiariasTable(_: unknown, args: any) {
-      return diariasService.getDiariasTableData(
+    getDiariasTable: async (_: unknown, args: any, context: { diariasService: DiariasService }) => {
+      const service = context.diariasService
+      if (!service) throw new Error("getDiariasTable não inicializado");
+      return await service.getDiariasTableData(
         args.limit,
         args.offset,
         args.sortBy,
@@ -19,23 +21,28 @@ export const diariasResolvers = () => ({
         args.tableFilters)
     },
 
-    getDiariasTableCount(_: unknown, args: any) {
-      return diariasService.getTableCount(args.filters, args.tableFilters)
+    getDiariasKpi(_: unknown, { filters }: { filters?: DiariasFilters }, context: { diariasService: DiariasService }) {
+      const service = context.diariasService
+      if (!service) throw new Error("getDiariasKpi não inicializado");
+      return service.getKpi(filters)
     },
 
-    getDiariasKpi(_: unknown, { filters }: { filters?: DiariasFilters }) {
-      return diariasService.getKpi(filters)
+    getDiariasCharts(_: unknown, { filters }: { filters?: DiariasFilters }, context: { diariasService: DiariasService }) {
+      const service = context.diariasService
+      if (!service) throw new Error("getDiariasCharts não inicializado");
+      return service.getCharts(filters)
     },
 
-    getDiariasCharts(_: unknown, { filters }: { filters?: DiariasFilters }) {
-      return diariasService.getCharts(filters)
-    },
-    getDiariasFiltersOptions(_: unknown, { filters }: { filters?: DiariasFilters }) {
-      return diariasService.getFilterOptions(filters)
+    getDiariasFiltersOptions(_: unknown, { filters }: { filters?: DiariasFilters }, context: { diariasService: DiariasService }) {
+      const service = context.diariasService
+      if (!service) throw new Error("getDiariasFiltersOptions não inicializado");
+      return service.getFilterOptions(filters)
     },
 
-    getDiariasLastUpdate() {
-      return diariasService.getLastUpdate()
+    getDiariasLastUpdate(_:unknown, args: any, context: { diariasService: DiariasService }) {
+      const service = context.diariasService
+      if (!service) throw new Error("getDiariasLastUpdate não inicializado");
+      return service.getDiariasLastUpdate()
     }
   },
 });

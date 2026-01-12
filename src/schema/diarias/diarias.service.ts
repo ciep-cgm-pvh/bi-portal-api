@@ -1,173 +1,169 @@
-import { loadDiarias } from '../../data/loadDiarias';
+import { getDiariasData } from '../../data/loadDiarias';
 import { Processor } from '../../utils/processor';
-import { DiariasProcessor } from './diariasProcessor';
-import { mapToProcessed } from './utils/mapToProcessed';
-import { DiariaProcessed, DiariasFilters, DiariasTableFilters } from './utils/types';
+import { mapDiariasFiltersToApiParams, mapToProcessedTable} from './utils/mapToProcessed';
+import { Diarias, DiariasFilters, DiariasTableFilters, PaginatedDiariasResponse } from './utils/types';
 
 export class DiariasService {
-  private rawData: any;
-  private processedData: DiariaProcessed[];
+  private rawData: any[];
 
-  constructor() {
-    this.rawData = loadDiarias();
-    this.processedData = mapToProcessed(Processor.processData(this.rawData));
+  constructor(rawData: any []) {
+    this.rawData = rawData;
   }
 
-  public getDiariasData(filters?: DiariasFilters): DiariaProcessed[] {
-    return DiariasProcessor.applyFilters(this.processedData, filters)
+  static async create(): Promise<DiariasService> {
+    const rawData = await getDiariasData("all");
+    return new DiariasService(rawData);
   }
 
-  public getDiariasTableData(
-      limit?: number,
-      offset?: number,
-      sortBy?: string,
-      sortDirection?: any,
-      filters?: DiariasFilters,
-    tableFilters?: DiariasTableFilters): DiariaProcessed[]  {
-    let filtered = DiariasProcessor.applyFilters(this.processedData, filters, tableFilters);
+  public async getDiarias(filters?: DiariasFilters): Promise<Diarias[]> {
+    const params = mapDiariasFiltersToApiParams(filters);
+    const data = await getDiariasData("all", params);
+    return data;
+  }
+
+  public async getDiariasTableData(
+    limit?: number,
+    offset?: number,
+    sortBy?: string,
+    sortDirection?: any,
+    filters?: DiariasFilters,
+    tableFilters?: DiariasTableFilters
+  ): Promise<PaginatedDiariasResponse> {
+    const params = mapDiariasFiltersToApiParams(filters);
+    let data = await getDiariasData("table_data", params);
     
-    filtered = Processor.sortData(filtered, sortBy, (sortDirection || "ascending"))
+    data = mapToProcessedTable(data);
+    let totalCount = data.length;
 
-    if (typeof offset === 'number' && typeof limit === 'number') {
-      filtered = filtered.slice(offset, offset + limit);
+    if (tableFilters) {
+      data = data.filter((item: any) => {
+        const matchesEmployee = !tableFilters.employee || item.employee?.toLowerCase().includes(tableFilters.employee.toLowerCase());
+        const matchesDepartment = !tableFilters.departmentCode || item.departmentCode.toLowerCase().includes(tableFilters.departmentCode.toLowerCase());
+        const matchesGrantedAmount = !tableFilters.grantedAmount || String(item.grantedAmount)?.includes(tableFilters.grantedAmount.toLowerCase());
+        const matchesApprovalDate = !tableFilters.approvalDate || item.approvalDate?.toString().toLowerCase().includes(tableFilters.approvalDate.toLowerCase());
+        const matchesProcessNumber = !tableFilters.processNumber || item.processNumber?.toLowerCase().includes(tableFilters.processNumber.toLowerCase());
+        const matchesStatus = !tableFilters.status || item.status?.toString().toLowerCase().includes(tableFilters.status.toLowerCase());
+        return matchesEmployee && matchesDepartment && matchesGrantedAmount && matchesApprovalDate && matchesProcessNumber && matchesStatus;
+      });
     }
-    
-    return filtered;
-  }
 
-  public getTableCount(filters?: DiariasFilters, tableFilters?: DiariasTableFilters) {
-      return DiariasProcessor.applyFilters(this.processedData, filters, tableFilters).length;
-  }
+    data = Processor.sortData(data, sortBy, sortDirection || "ascending");
+    totalCount = data.length;
 
-  public getKpi(filters?: DiariasFilters) {
-    const data = this.getDiariasData(filters)
-
-    //Custo total
-    const totalGasto = data.map(r => Number(r.amountGranted) || 0).reduce((acc, val) => acc + val, 0)
-
-    const totalDiarias = data.filter(d => d.approvedDate && d.approvedDate !== "N/A").length;
+    if (typeof offset === "number" && typeof limit === "number") {
+      data = data.slice(offset, offset + limit);
+    }
 
     return {
-      totalGasto,
+      data,
+      totalCount,
+    };
+  }
+
+  public async getDiariasLastUpdate() {
+    const lastUpdate = await getDiariasData("kpi/last_update")
+    return lastUpdate.last_update;
+  }
+
+  public async getKpi(filters?: DiariasFilters) {
+    const params = mapDiariasFiltersToApiParams(filters);
+    const data = await getDiariasData("kpis/gerais", params);
+
+    const totalConcedido = data.resultados.total_concedido
+    const totalAprovado = data.resultados.total_aprovado
+    const totalDiarias = data.resultados.total_processos_unicos
+    return {
+      totalConcedido,
+      totalAprovado,
       totalDiarias
-    }
-  }
-
-  public getCharts(filters?: DiariasFilters) {
-    const data = this.getDiariasData(filters);
-
-    // --- Gasto por mês ---
-    const GastoMesDiaria = data.reduce<Record<string, number>>((acc, item) => {
-      if (!item.paymentDate) return acc;
-
-      const [ day, month, year ] = item.paymentDate.split('/').map(Number);
-      if (!day || !month || !year) return acc;
-
-      const mesAno = `${String(month).padStart(2, '0')}/${year}`;
-      acc[ mesAno ] = (acc[ mesAno ] || 0) + (Number(item.amountGranted) || 0);
-
-      return acc;
-    }, {})
-
-    const gastoMesArray = Object.entries(GastoMesDiaria)
-      .map(([ month, total ]) => ({ month, total }))
-      .sort((a, b) => {
-        const [ m1, y1 ] = a.month.split('/');
-        const [ m2, y2 ] = b.month.split('/');
-        return new Date(Number(y1), Number(m1) - 1, 1).getTime() -
-          new Date(Number(y2), Number(m2) - 1, 1).getTime();
-      });
-
-    // --- Gasto por órgão ---
-    const OrgaoGastoDiaria = data.reduce<Record<string, number>>((acc, item) => {
-      const orgao = item.department || 'N/A';
-      acc[ orgao ] = (acc[ orgao ] || 0) + (Number(item.amountGranted) || 0);
-      return acc;
-    }, {});
-
-    const orgaoArray = Object.entries(OrgaoGastoDiaria)
-      .map(([ name, total ]) => ({ name, total }))
-      .sort((a, b) => b.total - a.total);
-
-    // --- Retorno final ---
-    return {
-      GastoMesDiaria: gastoMesArray,
-      OrgaoGastoDiaria: orgaoArray
     };
   }
 
-  public getFilterOptions(filters?: DiariasFilters) {
-    const allData = this.getDiariasData();
-
-    const mapToFilterType = (arr: (string | undefined | null)[]) =>
-      Array.from(new Set(arr.filter(Boolean))).sort()
-        .map(value => ({ value: value!, label: value! }));
-
-    // 1. Filtra dados com base em TODOS os filtros ativos
-    let filtered = allData;
-
-    if (filters?.dateRange?.from) {
-      const fromDate = new Date(filters.dateRange.from);
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.paymentDate);
-        return itemDate !== null && itemDate >= fromDate;
-      });
-    }
-    if (filters?.dateRange?.to) {
-      const toDate = new Date(filters.dateRange.to);
-      filtered = filtered.filter(item => {
-        const itemDate = new Date(item.paymentDate);
-        return itemDate !== null && itemDate <= toDate;
-      });
-    }
-
-    if (filters?.department) {
-      const departments = Array.isArray(filters.department)
-        ? filters.department.map(d => String(d).toLowerCase())
-        : [ String(filters.department).toLowerCase() ];
-
-      filtered = filtered.filter(item =>
-        departments.includes(String(item.department ?? '').toLowerCase())
-      );
-    }
-
-    if (filters?.status) {
-      filtered = filtered.filter(item => item.processNumber.toLowerCase() === filters.status.toLowerCase());
-    }
-
-    // 2. Gera as opções dinamicamente a partir do dataset já filtrado
-    const departmentOptions = mapToFilterType(filtered.map(item => item.department));
-    const processNumberOptions = mapToFilterType(filtered.map(item => item.processNumber));
-    const statusOptions = mapToFilterType(filtered.map(item => item.status));
-
-    return {
-      department: departmentOptions,
-      processNumber: processNumberOptions,
-      status: statusOptions,
-    };
-  }
-
-  public getLastUpdate() {
-    const dates = this.getDiariasData()
-      .map(item => item.approvedDate)
-      .filter(Boolean)
-      .map((dateStr: string) => {
-        // Pega apenas a parte da data antes do espaço
-        const [ datePart ] = dateStr.split(" "); // "31/07/2025"
-        const [ day, month, year ] = datePart.split("/").map(Number);
-        return new Date(year, month - 1, day);
+  public async getCharts(filters?: DiariasFilters) {
+    const params = mapDiariasFiltersToApiParams(filters);
+    const data1 = await getDiariasData("dashboard/gastos_por_entidade", params);
+    const data2 = await getDiariasData("dashboard/gastos_por_funcionario", params);
+    const data3 = await getDiariasData("dashboard/gasto_por_mes", params);
+    
+    const GastoOrgaoDiaria = (
+      data1.resultados.map((item: any) => {
+        return {
+          name: item.cnoOrgao,
+          total: Number(item.TotalGasto),
+        };
       })
-      .filter((date: Date) => !isNaN(date.getTime()));
+    );
 
-    if (dates.length === 0) return null;
+    const GastoFuncionarioDiaria = 
+      data2.resultados.map((item: any) => ({
+        name: item.funcionario,
+        total: item.TotalGasto,
+      })
+    );
 
-    const latestDate = new Date(Math.max(...dates.map(d => d.getTime())));
+    const GastoMesDiaria = Processor.groupTop9WithOthers(
+      data3.resultados
+        .map((item: any) => ({
+          name: Processor.formatYearMonth(item.MesReferencia),
+          total: item.TotalGasto,
+        }))
+    );
 
-    // Retorna só no formato DD/MM/YYYY
-    const day = String(latestDate.getDate()).padStart(2, "0");
-    const month = String(latestDate.getMonth() + 1).padStart(2, "0");
-    const year = latestDate.getFullYear();
 
-    return `${year}-${month}-${day}`;
+    return {
+      GastoOrgaoDiaria,
+      GastoMesDiaria,
+      GastoFuncionarioDiaria,
+    }
+  }
+
+  // public async getFilterOptions(filters?: DiariasFilters) {
+  //   const params = mapDiariasFiltersToApiParams(filters);
+  //   let data = await getDiariasData("filterOptions", params);
+  //   const employee = data.funcionarioOptions
+  //   const processNumber = data.nroProcessoOptions
+  //   const status = data.statusOptions
+  //   const departmentCode = data.secretariaOptions
+
+  //   return {
+  //     employee,
+  //     processNumber,
+  //     status,
+  //     departmentCode,
+  //   };
+  // }
+  public async getFilterOptions(filters?: DiariasFilters) {
+    // Garante que allParams seja um objeto, mesmo que mapDiariasFiltersToApiParams retorne undefined
+    const allParams = mapDiariasFiltersToApiParams(filters) || {};
+    
+    // Define os filtros que queremos popular e suas chaves de parâmetro
+    const filterMap = {
+      secretaria: "departmentCode",
+      nroProcesso: "processNumber",
+      funcionario: "employee",
+      status: "status",
+    };
+    
+    const results: any = {};
+    
+    // Itera sobre cada filtro para buscar suas opções (LÓGICA DE CASCATA)
+    for (const [ paramKey, filterKey ] of Object.entries(filterMap)) {
+      
+      const paramsForCurrentFilter = { ...allParams };
+      delete paramsForCurrentFilter[ paramKey ]; // <--- EXCLUSÃO DO FILTRO ATUAL
+      
+      const data = await getDiariasData("filterOptions", paramsForCurrentFilter);
+
+      const responseKey = `${paramKey}Options`;
+      results[ responseKey ] = data[ responseKey ];
+    }
+
+    // Mapeia as chaves de resposta para o formato GraphQL
+    return {
+      employee: results[ "funcionarioOptions" ],
+      processNumber: results[ "nroProcessoOptions" ],
+      status: results[ "statusOptions" ],
+      departmentCode: results[ "secretariaOptions" ],
+    };
   }
 }

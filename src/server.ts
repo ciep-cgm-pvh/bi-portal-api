@@ -12,7 +12,7 @@ import { DiariasService } from './schema/diarias/diarias.service';
 dotenv.config();
 
 export async function buildServer() {
-  const isDev = process.env.NODE_ENV !== 'production';
+  const isDev = process.env.NODE_ENV !== 'PRODUCTION';
   const isVercel = process.env.VERCEL === '1';
 
   const app = Fastify({
@@ -31,11 +31,9 @@ export async function buildServer() {
     origin: allowedOrigins,
     credentials: true,
     methods: [ 'GET', 'POST', 'OPTIONS' ],
-    allowedHeaders: [ 'Content-Type', 'Authorization' ],
   });
 
-  // Rate Limit só em dev local (não serverless)
-  if (isDev && !isVercel) {
+  if (!isDev && isVercel) {
     await app.register(fastifyRateLimit, {
       max: 50,
       timeWindow: '1 minute',
@@ -54,9 +52,9 @@ export async function buildServer() {
   }));
 
   // Inicializa serviço
-  const [ abastecimento ] = await Promise.allSettled([
+  const [ abastecimento, diarias ] = await Promise.allSettled([
     AbastecimentoService.create(),
-    // DiariasService.create()
+    DiariasService.create()
   ]);
 
   if (abastecimento.status === 'fulfilled')
@@ -64,15 +62,15 @@ export async function buildServer() {
   else
     console.error('Erro ao inicializar AbastecimentoService:', abastecimento.reason);
 
-  // if (diarias.status === 'fulfilled')
-  //   console.log('🚀 DiariasService inicializado!');
-  // else
-  //   console.error('Erro ao inicializar DiariasService:', diarias.reason);
+  if (diarias.status === 'fulfilled')
+    console.log('🚀 DiariasService inicializado!');
+  else
+    console.error('Erro ao inicializar DiariasService:', diarias.reason);
 
   const abastecimentoService =
     abastecimento.status === 'fulfilled' ? abastecimento.value : null;
-  // const diariasService =
-  //   diarias.status === 'fulfilled' ? diarias.value : null;
+  const diariasService =
+    diarias.status === 'fulfilled' ? diarias.value : null;
 
   // Schema GraphQL
   const schema = await buildSchema(app);
@@ -80,7 +78,7 @@ export async function buildServer() {
   // Mercurius
   await app.register(mercurius, {
     schema,
-    context: () => ({ abastecimentoService }),
+    context: () => ({ abastecimentoService, diariasService }),
     graphiql: isDev,
     path: '/graphql',
   });

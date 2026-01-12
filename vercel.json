@@ -14,7 +14,16 @@
   "routes": [
     {
       "src": "/graphql",
-      "methods": ["OPTIONS"],
+      "methods": [
+        "OPTIONS"
+      ],
+      "has": [
+        {
+          "type": "header",
+          "key": "Origin",
+          "value": "https://paineis-cgm.vercel.app"
+        }
+      ],
       "headers": {
         "Access-Control-Allow-Origin": "https://paineis-cgm.vercel.app",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -25,9 +34,60 @@
     },
     {
       "src": "/graphql",
-      "methods": ["GET", "POST"],
+      "methods": [
+        "OPTIONS"
+      ],
+      "has": [
+        {
+          "type": "header",
+          "key": "Origin",
+          "value": "https://bi-portal-frontend-developer.vercel.app"
+        }
+      ],
+      "headers": {
+        "Access-Control-Allow-Origin": "https://bi-portal-frontend-developer.vercel.app",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true"
+      },
+      "status": 200
+    },
+    {
+      "src": "/graphql",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "has": [
+        {
+          "type": "header",
+          "key": "Origin",
+          "value": "https://paineis-cgm.vercel.app"
+        }
+      ],
       "headers": {
         "Access-Control-Allow-Origin": "https://paineis-cgm.vercel.app",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Allow-Credentials": "true"
+      },
+      "dest": "src/index.ts"
+    },
+    {
+      "src": "/graphql",
+      "methods": [
+        "GET",
+        "POST"
+      ],
+      "has": [
+        {
+          "type": "header",
+          "key": "Origin",
+          "value": "https://bi-portal-frontend-developer.vercel.app"
+        }
+      ],
+      "headers": {
+        "Access-Control-Allow-Origin": "https://bi-portal-frontend-developer.vercel.app",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
         "Access-Control-Allow-Headers": "Content-Type, Authorization",
         "Access-Control-Allow-Credentials": "true"
