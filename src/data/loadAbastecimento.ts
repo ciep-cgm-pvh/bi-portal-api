@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = "http://bi-portal-data.vercel.app/api/abastecimento";
+const BASE_URL = `${process.env.DATA_API_URL}/api/abastecimento`;
 
 export async function getAbastecimentoData(path: string, filters?: Record<string, any>) {
   try {
@@ -21,11 +21,9 @@ export async function getAbastecimentoData(path: string, filters?: Record<string
 
 function buildQueryParams(params: Record<string, any>) {
   const query = Object.entries(params)
-    .filter(([ _, value ]) => value !== undefined && value !== null && value !== "")
-    .map(([ key, value ]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .filter(([_, value]) => value !== undefined && value !== null && value !== "")
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join("&");
 
   return query ? `?${query}` : "";
 }
-
-
