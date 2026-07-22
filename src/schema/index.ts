@@ -8,6 +8,7 @@ import { diariasResolvers } from './diarias/diarias.resolver';
 import abastecimentoResolver from './abastecimento/abastecimento.resolver';
 import osResolvers from './os/os.resolver';
 import { manutencaoResolvers } from './manutenção/manutencao.resolver';
+import { suprimentoResolver } from './suprimento/suprimento.resolver';
 
 export const buildSchema = async (app: FastifyInstance) => {
   // Carrega todos os .typeDefs.ts e .resolver.ts dentro da pasta schema
@@ -22,6 +23,7 @@ export const buildSchema = async (app: FastifyInstance) => {
     abastecimentoResolver,
     manutencaoResolvers(),
     osResolvers(),
+    suprimentoResolver,
   ]);
 
   return makeExecutableSchema({ typeDefs, resolvers });

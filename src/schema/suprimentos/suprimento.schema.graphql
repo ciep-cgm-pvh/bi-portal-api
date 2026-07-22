@@ -1,0 +1,61 @@
+# src/schema/suprimento/suprimento.schema.graphql
+
+type Suprimento {
+  id: String
+  expenseType: String
+  paymentNumber: String
+  paymentDate: String
+  settlementNumber: String
+  fiscalDoc: String
+  commitmentNumber: String
+  employee: String
+  employeeDoc: String
+  limitDeliveryDate: String
+  limitSpendDate: String
+  requestDate: String
+  history: String
+  amountRequested: Float
+  approvalDate: String
+  amountApproved: Float
+  grantedAmount: Float
+  balance: Float
+  entityName: String
+  departmentCode: String
+  processNumber: String
+  status: String
+}
+
+type PaginatedSuprimento {
+  data: [Suprimento]
+  totalCount: Int
+}
+
+type SuprimentoKpis {
+  totalConcedido: Float
+  totalAprovado: Float
+  totalProcessos: Int
+  lastUpdate: String
+}
+
+type SuprimentoCharts {
+  GastoOrgao: [ChartData]
+  GastoMes: [ChartData]
+  GastoFuncionario: [ChartData]
+}
+
+extend type Query {
+  getSuprimentoTable(
+    limit: Int
+    offset: Int
+    sortBy: String
+    sortDirection: String
+    filters: SuprimentoFiltersInput
+    tableFilters: SuprimentoTableFiltersInput
+  ): PaginatedSuprimento
+
+  SuprimentoKpis(filters: SuprimentoFiltersInput): SuprimentoKpis
+
+  SuprimentoCharts(filters: SuprimentoFiltersInput): SuprimentoCharts
+
+  SuprimentoFilterOptions(filters: SuprimentoFiltersInput): FilterOptions
+}

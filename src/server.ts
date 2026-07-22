@@ -9,6 +9,7 @@ import Fastify from 'fastify';
 import mercurius from 'mercurius';
 import { AbastecimentoService } from './schema/abastecimento/abastecimento.service';
 import { buildSchema } from './schema/index';
+import { SuprimentoService } from './schema/suprimento/suprimento.service';
 import { DiariasService } from './schema/diarias/diarias.service';
 
 export async function buildServer() {
@@ -52,9 +53,10 @@ export async function buildServer() {
   }));
 
   // Inicializa serviço
-  const [abastecimento, diarias] = await Promise.allSettled([
+  const [abastecimento, diarias, suprimento] = await Promise.allSettled([
     AbastecimentoService.create(),
-    DiariasService.create()
+    DiariasService.create(),
+    SuprimentoService.create()
   ]);
 
   if (abastecimento.status === 'fulfilled')
@@ -67,10 +69,17 @@ export async function buildServer() {
   else
     console.error('Erro ao inicializar DiariasService:', diarias.reason);
 
+  if (suprimento.status === 'fulfilled')
+    console.log('🚀 SuprimentoService inicializado!');
+  else
+    console.error('Erro ao inicializar SuprimentoService:', suprimento.reason);
+
   const abastecimentoService =
     abastecimento.status === 'fulfilled' ? abastecimento.value : null;
   const diariasService =
     diarias.status === 'fulfilled' ? diarias.value : null;
+  const suprimentoService =
+    suprimento.status === 'fulfilled' ? suprimento.value : null;
 
   // Schema GraphQL
   const schema = await buildSchema(app);
@@ -78,7 +87,7 @@ export async function buildServer() {
   // Mercurius
   await app.register(mercurius, {
     schema,
-    context: () => ({ abastecimentoService, diariasService }),
+    context: () => ({ abastecimentoService, diariasService, suprimentoService }),
     graphiql: isDev,
     path: '/graphql',
   });
