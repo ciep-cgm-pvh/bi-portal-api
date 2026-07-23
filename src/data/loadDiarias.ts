@@ -11,7 +11,7 @@ import * as XLSX from 'xlsx';
 
 import axios from "axios";
 
-const BASE_URL = "http://bi-portal-data.vercel.app/api/diarias";
+const BASE_URL = `${process.env.DATA_API_URL}/api/diarias`;
 
 export async function getDiariasData(path: string, filters?: Record<string, any>) {
   try {
@@ -32,11 +32,9 @@ export async function getDiariasData(path: string, filters?: Record<string, any>
 
 function buildQueryParams(params: Record<string, any>) {
   const query = Object.entries(params)
-    .filter(([ _, value ]) => value !== undefined && value !== null)
-    .map(([ key, value ]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .filter(([_, value]) => value !== undefined && value !== null)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
     .join("&");
 
   return query ? `?${query}` : "";
 }
-
-

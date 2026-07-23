@@ -1,15 +1,16 @@
 // src/server.ts
+import dotenv from 'dotenv';
+dotenv.config();
+
 import cors from '@fastify/cors';
 import fastifyHelmet from '@fastify/helmet';
 import fastifyRateLimit from '@fastify/rate-limit';
-import dotenv from 'dotenv';
 import Fastify from 'fastify';
 import mercurius from 'mercurius';
 import { AbastecimentoService } from './schema/abastecimento/abastecimento.service';
 import { buildSchema } from './schema/index';
+import { SuprimentoService } from './schema/suprimentos/suprimento.service';
 import { DiariasService } from './schema/diarias/diarias.service';
-
-dotenv.config();
 
 export async function buildServer() {
   const isDev = process.env.NODE_ENV !== 'PRODUCTION';
@@ -30,7 +31,7 @@ export async function buildServer() {
   await app.register(cors, {
     origin: allowedOrigins,
     credentials: true,
-    methods: [ 'GET', 'POST', 'OPTIONS' ],
+    methods: ['GET', 'POST', 'OPTIONS'],
   });
 
   if (!isDev && isVercel) {
@@ -52,9 +53,10 @@ export async function buildServer() {
   }));
 
   // Inicializa serviço
-  const [ abastecimento, diarias ] = await Promise.allSettled([
+  const [abastecimento, diarias, suprimento] = await Promise.allSettled([
     AbastecimentoService.create(),
-    DiariasService.create()
+    DiariasService.create(),
+    SuprimentoService.create()
   ]);
 
   if (abastecimento.status === 'fulfilled')
@@ -67,10 +69,17 @@ export async function buildServer() {
   else
     console.error('Erro ao inicializar DiariasService:', diarias.reason);
 
+  if (suprimento.status === 'fulfilled')
+    console.log('🚀 SuprimentoService inicializado!');
+  else
+    console.error('Erro ao inicializar SuprimentoService:', suprimento.reason);
+
   const abastecimentoService =
     abastecimento.status === 'fulfilled' ? abastecimento.value : null;
   const diariasService =
     diarias.status === 'fulfilled' ? diarias.value : null;
+  const suprimentoService =
+    suprimento.status === 'fulfilled' ? suprimento.value : null;
 
   // Schema GraphQL
   const schema = await buildSchema(app);
@@ -78,7 +87,7 @@ export async function buildServer() {
   // Mercurius
   await app.register(mercurius, {
     schema,
-    context: () => ({ abastecimentoService, diariasService }),
+    context: () => ({ abastecimentoService, diariasService, suprimentoService }),
     graphiql: isDev,
     path: '/graphql',
   });
@@ -91,13 +100,13 @@ export async function buildServer() {
         ? false
         : {
           directives: {
-            defaultSrc: [ "'self'" ],
-            scriptSrc: [ "'self'", "'unsafe-inline'", "'unsafe-eval'" ],
-            styleSrc: [ "'self'", "'unsafe-inline'" ],
-            imgSrc: [ "'self'", 'data:', 'https:' ],
-            fontSrc: [ "'self'" ],
-            objectSrc: [ "'none'" ],
-            frameAncestors: [ "'self'" ],
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", 'data:', 'https:'],
+            fontSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'self'"],
             upgradeInsecureRequests: [],
           },
         },

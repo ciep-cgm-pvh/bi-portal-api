@@ -1,6 +1,6 @@
 {
 	"scripts": {
-		"dev": "pnpm i && ts-node-dev --respawn --transpile-only src/index.ts",
+		"dev": "npm install && ts-node-dev --respawn --transpile-only src/index.ts",
 		"start": "node dist/index.js",
 		"build": "tsc"
 	},
