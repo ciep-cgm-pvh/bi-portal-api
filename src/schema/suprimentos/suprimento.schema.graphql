@@ -1,4 +1,25 @@
-# src/schema/suprimento/suprimento.schema.graphql
+# src/schema/suprimentos/suprimento.schema.graphql
+
+# === Inputs ===
+
+input SuprimentoFiltersInput {
+  dateRange: DateRangeInput
+  departmentCode: String
+  status: String
+  processNumber: String
+  employee: String
+}
+
+input SuprimentoTableFiltersInput {
+  approvalDate: String
+  grantedAmount: String
+  departmentCode: String
+  processNumber: String
+  employee: String
+  status: String
+}
+
+# === Tipos de Dados ===
 
 type Suprimento {
   id: String
@@ -17,18 +38,50 @@ type Suprimento {
   amountRequested: Float
   approvalDate: String
   amountApproved: Float
+  disallowedDate: String
+  disallowedValue: Float
+  defaultDate: String
+  defaultValue: Float
+  grantedDate: String
+  grantedValue: Float
+  canceledDate: String
+  canceledValue: Float
   grantedAmount: Float
   balance: Float
   entityName: String
   departmentCode: String
+  budgetUnitCode: String
+  functionCode: String
+  subFunctionCode: String
+  programCode: String
+  actionCode: String
+  expensePlanCode: String
+  subElementCode: String
+  resourceSourceCode: String
+  baseDate: String
+  finalAccountDate: String
+  delayDays: String
   processNumber: String
+  advanceNumber: String
+  status: String
+}
+
+# Tipo para a tabela (campos reduzidos)
+type SuprimentoTable {
+  departmentCode: String
+  processNumber: String
+  employee: String
+  grantedAmount: Float
+  approvalDate: String
   status: String
 }
 
 type PaginatedSuprimento {
-  data: [Suprimento]
+  data: [SuprimentoTable]
   totalCount: Int
 }
+
+# === KPIs ===
 
 type SuprimentoKpis {
   totalConcedido: Float
@@ -37,13 +90,38 @@ type SuprimentoKpis {
   lastUpdate: String
 }
 
-type SuprimentoCharts {
-  GastoOrgao: [ChartData]
-  GastoMes: [ChartData]
-  GastoFuncionario: [ChartData]
+# === Charts ===
+
+type SuprimentoChartData {
+  name: String
+  total: Float
 }
 
+type SuprimentoCharts {
+  GastoOrgao: [SuprimentoChartData]
+  GastoMes: [SuprimentoChartData]
+  GastoFuncionario: [SuprimentoChartData]
+}
+
+# === FilterOptions ===
+
+type SuprimentoFilterOption {
+  value: String
+  label: String
+}
+
+type SuprimentoFilterOptions {
+  employee: [SuprimentoFilterOption]
+  processNumber: [SuprimentoFilterOption]
+  status: [SuprimentoFilterOption]
+  departmentCode: [SuprimentoFilterOption]
+}
+
+# === Queries ===
+
 extend type Query {
+  getSuprimentos(filters: SuprimentoFiltersInput): [Suprimento]
+
   getSuprimentoTable(
     limit: Int
     offset: Int
@@ -53,9 +131,11 @@ extend type Query {
     tableFilters: SuprimentoTableFiltersInput
   ): PaginatedSuprimento
 
+  getSuprimentoLastUpdate: DateTime
+
   SuprimentoKpis(filters: SuprimentoFiltersInput): SuprimentoKpis
 
   SuprimentoCharts(filters: SuprimentoFiltersInput): SuprimentoCharts
 
-  SuprimentoFilterOptions(filters: SuprimentoFiltersInput): FilterOptions
+  SuprimentoFilterOptions(filters: SuprimentoFiltersInput): SuprimentoFilterOptions
 }

@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const API_BASE_URL = `${process.env.DATA_API_URL}/api/suprimento`;
-const API_KEY = process.env.DATA_API_KEY;
+const API_KEY = process.env.DATA_API_KEY || process.env.API_SECRET_KEY;
 
 function buildQueryParams(filters?: Record<string, any>): string {
     if (!filters) return '';

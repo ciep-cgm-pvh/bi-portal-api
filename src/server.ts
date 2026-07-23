@@ -9,7 +9,7 @@ import Fastify from 'fastify';
 import mercurius from 'mercurius';
 import { AbastecimentoService } from './schema/abastecimento/abastecimento.service';
 import { buildSchema } from './schema/index';
-import { SuprimentoService } from './schema/suprimento/suprimento.service';
+import { SuprimentoService } from './schema/suprimentos/suprimento.service';
 import { DiariasService } from './schema/diarias/diarias.service';
 
 export async function buildServer() {

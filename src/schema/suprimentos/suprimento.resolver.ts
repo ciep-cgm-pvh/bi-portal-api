@@ -1,9 +1,27 @@
-// src/schema/suprimento/suprimento.resolver.ts
+// src/schema/suprimentos/suprimento.resolver.ts
+import { SuprimentoService } from './suprimento.service';
+import { SuprimentoFilters } from './utils/types';
 
-export const suprimentoResolver = {
+export const suprimentoResolver = () => ({
   Query: {
-    getSuprimentoTable: async (_: any, args: any, ctx: any) => {
-      return ctx.suprimentoService.getSuprimentoTableData(
+    getSuprimentos: async (
+      _: unknown,
+      { filters }: { filters?: SuprimentoFilters },
+      context: { suprimentoService: SuprimentoService }
+    ) => {
+      const service = context.suprimentoService;
+      if (!service) throw new Error("getSuprimentos não inicializado");
+      return service.getSuprimentos(filters);
+    },
+
+    getSuprimentoTable: async (
+      _: unknown,
+      args: any,
+      context: { suprimentoService: SuprimentoService }
+    ) => {
+      const service = context.suprimentoService;
+      if (!service) throw new Error("getSuprimentoTable não inicializado");
+      return service.getSuprimentoTableData(
         args.limit,
         args.offset,
         args.sortBy,
@@ -12,16 +30,47 @@ export const suprimentoResolver = {
         args.tableFilters
       );
     },
-    SuprimentoKpis: async (_: any, { filters }: any, ctx: any) => {
-      const kpis = await ctx.suprimentoService.getKpi(filters);
-      const lastUpdate = await ctx.suprimentoService.getLastUpdate();
+
+    getSuprimentoLastUpdate: async (
+      _: unknown,
+      __: any,
+      context: { suprimentoService: SuprimentoService }
+    ) => {
+      const service = context.suprimentoService;
+      if (!service) throw new Error("getSuprimentoLastUpdate não inicializado");
+      return service.getLastUpdate();
+    },
+
+    SuprimentoKpis: async (
+      _: unknown,
+      { filters }: { filters?: SuprimentoFilters },
+      context: { suprimentoService: SuprimentoService }
+    ) => {
+      const service = context.suprimentoService;
+      if (!service) throw new Error("SuprimentoKpis não inicializado");
+      const kpis = await service.getKpi(filters);
+      const lastUpdate = await service.getLastUpdate();
       return { ...kpis, lastUpdate };
     },
-    SuprimentoCharts: async (_: any, { filters }: any, ctx: any) => {
-      return ctx.suprimentoService.getCharts(filters);
+
+    SuprimentoCharts: async (
+      _: unknown,
+      { filters }: { filters?: SuprimentoFilters },
+      context: { suprimentoService: SuprimentoService }
+    ) => {
+      const service = context.suprimentoService;
+      if (!service) throw new Error("SuprimentoCharts não inicializado");
+      return service.getCharts(filters);
     },
-    SuprimentoFilterOptions: async (_: any, { filters }: any, ctx: any) => {
-      return ctx.suprimentoService.getFilterOptions(filters);
+
+    SuprimentoFilterOptions: async (
+      _: unknown,
+      { filters }: { filters?: SuprimentoFilters },
+      context: { suprimentoService: SuprimentoService }
+    ) => {
+      const service = context.suprimentoService;
+      if (!service) throw new Error("SuprimentoFilterOptions não inicializado");
+      return service.getFilterOptions(filters);
     },
   },
-};
+});
