@@ -24,7 +24,9 @@ export async function buildServer() {
   const allowedOrigins = [
     'https://bi-portal-frontend-developer.vercel.app',
     'https://paineis-cgm.vercel.app',
-    'http://localhost:5173'
+    'http://localhost:5173',
+    /^https:\/\/bi-portal-frontend-.*\.vercel\.app$/, // Permite links temporários de preview do Vercel
+    /^https:\/\/.*-cgm-pvhs-projects\.vercel\.app$/  // Permite links com o nome do projeto
   ];
 
   // CORS - Como o vercel.json já adiciona os headers, simplificamos aqui
