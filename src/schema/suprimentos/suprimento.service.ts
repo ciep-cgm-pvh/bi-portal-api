@@ -29,7 +29,10 @@ export class SuprimentoService {
     let data = mapToProcessedTable(Array.isArray(rawData) ? rawData : rawData?.resultados || []);
 
     if (tableFilters) {
-      data = data.filter((item: any) => {
+    data = data.filter((item: any) => {
+        const matchesCommitmentNumber =
+          !tableFilters.commitmentNumber ||
+          item.commitmentNumber?.toLowerCase().includes(tableFilters.commitmentNumber.toLowerCase());
         const matchesEmployee =
           !tableFilters.employee ||
           item.employee?.toLowerCase().includes(tableFilters.employee.toLowerCase());
@@ -50,6 +53,7 @@ export class SuprimentoService {
           item.status?.toString().toLowerCase().includes(tableFilters.status.toLowerCase());
 
         return (
+          matchesCommitmentNumber &&
           matchesEmployee &&
           matchesDepartment &&
           matchesGrantedAmount &&

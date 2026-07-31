@@ -15,6 +15,7 @@ input SuprimentoTableFiltersInput {
   grantedAmount: String
   departmentCode: String
   processNumber: String
+  commitmentNumber: String
   employee: String
   status: String
 }
@@ -69,6 +70,7 @@ type Suprimento {
 # Tipo para a tabela (campos reduzidos)
 type SuprimentoTable {
   departmentCode: String
+  commitmentNumber: String
   processNumber: String
   employee: String
   grantedAmount: Float

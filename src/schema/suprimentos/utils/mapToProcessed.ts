@@ -51,6 +51,7 @@ export function mapToProcessedTable(rows: Record<string, any>[]): Partial<Suprim
   if (!Array.isArray(rows)) return [];
   return rows.map((row) => ({
     id: row["id"] || row["ID"] || "",
+    commitmentNumber: row["ndaEmpenho"] || row["commitmentNumber"] || "",
     departmentCode: row["cnoOrgao"] || row["departmentCode"] || "",
     processNumber: row["nroProcesso"] || row["processNumber"] || "",
     employee: row["funcionario"] || row["employee"] || "",
