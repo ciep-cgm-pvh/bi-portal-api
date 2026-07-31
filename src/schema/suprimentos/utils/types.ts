@@ -57,6 +57,7 @@ export interface SuprimentoFilters {
 }
 
 export interface SuprimentoTableFilters {
+  commitmentNumber?: string;
   processNumber?: string;
   departmentCode?: string;
   approvalDate?: string;
