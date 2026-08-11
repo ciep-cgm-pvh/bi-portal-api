@@ -1,0 +1,149 @@
+scalar DateTime
+
+input DateRangeInput {
+  from: DateTime
+  to: DateTime
+}
+
+# Filtros gerais do dashboard de Obras
+input ObrasFilters {
+  dateRange: DateRangeInput
+  departmentCode: String
+  program: String
+  projectActivity: String
+  creditor: String
+  processNumber: String
+}
+
+input ObrasFiltersOptions {
+  dateRange: DateRangeInput
+  departmentCode: String
+  program: String
+  projectActivity: String
+  creditor: String
+  processNumber: String
+}
+
+# Filtros por coluna da tabela
+input ObrasTableFilters {
+  empenhoNumber: String
+  empenhoDate: String
+  departmentCode: String
+  program: String
+  projectActivity: String
+  creditor: String
+  processNumber: String
+  subject: String
+  committedAmount: String
+  settledAmount: String
+  paidAmount: String
+}
+
+# KPIs do painel
+type ObrasKpiData {
+  totalEmpenhado: Float
+  totalLiquidado: Float
+  totalPago: Float
+  totalProcessos: Int
+  totalEmpenhos: Int
+}
+
+type ObrasChartItem {
+  name: String
+  total: Float
+}
+
+type ObrasCharts {
+  EmpenhadoOrgao: [ObrasChartItem]
+  EmpenhadoMes: [ObrasChartItem]
+  EmpenhadoPrograma: [ObrasChartItem]
+  EmpenhadoCredor: [ObrasChartItem]
+}
+
+# Linha da tabela (grão = empenho)
+type ObraTable {
+  id: String
+  empenhoNumber: String
+  empenhoDate: String
+  departmentCode: String
+  program: String
+  projectActivity: String
+  creditor: String
+  processNumber: String
+  subject: String
+  committedAmount: Float
+  settledAmount: Float
+  paidAmount: Float
+}
+
+type ObrasTableResponse {
+  data: [ObraTable]
+  totalCount: Int!
+}
+
+# Registro completo do empenho, usado no download da fonte de dados
+type Obra {
+  id: String
+  empenhoNumber: String
+  empenhoYear: Int
+  empenhoDate: String
+  empenhoType: String
+  departmentCode: String
+  budgetUnit: String
+  program: String
+  projectActivity: String
+  expenseElement: String
+  fundingSource: String
+  subElement: String
+  creditor: String
+  creditorCode: String
+  creditorDocument: String
+  processNumber: String
+  subject: String
+  contractNumber: String
+  contractYear: Int
+  committedAmount: Float
+  settledAmount: Float
+  paidAmount: Float
+}
+
+# Resumo agregado por secretaria
+type ObrasDepartmentSummary {
+  departmentCode: String
+  totalEmpenhado: Float
+  totalLiquidado: Float
+  totalPago: Float
+  empenhoCount: Int
+}
+
+type FilterOption {
+  value: String
+  label: String
+}
+
+type FilterOptionsObras {
+  departmentCode: [FilterOption]
+  program: [FilterOption]
+  projectActivity: [FilterOption]
+  creditor: [FilterOption]
+  processNumber: [FilterOption]
+}
+
+type Query {
+  getObras(filters: ObrasFilters): [Obra]
+  getObrasDepartmentSummary(filters: ObrasFilters): [ObrasDepartmentSummary]
+
+  getObrasTable(
+    limit: Int
+    offset: Int
+    sortBy: String
+    sortDirection: String
+    filters: ObrasFilters
+    tableFilters: ObrasTableFilters
+  ): ObrasTableResponse
+
+  getObrasLastUpdate: DateTime
+  getObrasKpi(filters: ObrasFilters): ObrasKpiData
+  getObrasCharts(filters: ObrasFilters): ObrasCharts
+  getObrasFiltersOptions(filters: ObrasFiltersOptions): FilterOptionsObras
+}

@@ -11,6 +11,7 @@ import { AbastecimentoService } from './schema/abastecimento/abastecimento.servi
 import { buildSchema } from './schema/index';
 import { SuprimentoService } from './schema/suprimentos/suprimento.service';
 import { DiariasService } from './schema/diarias/diarias.service';
+import { ObrasService } from './schema/obras/obras.service';
 
 export async function buildServer() {
   const isDev = process.env.NODE_ENV !== 'PRODUCTION';
@@ -25,6 +26,8 @@ export async function buildServer() {
     'https://bi-portal-frontend-developer.vercel.app',
     'https://paineis-cgm.vercel.app',
     'http://localhost:5173',
+    // O Vite incrementa a porta quando a 5173 já está ocupada.
+    'http://localhost:5174',
     /^https:\/\/bi-portal-frontend-.*\.vercel\.app$/, // Permite links temporários de preview do Vercel
     /^https:\/\/.*-cgm-pvhs-projects\.vercel\.app$/  // Permite links com o nome do projeto
   ];
@@ -55,9 +58,10 @@ export async function buildServer() {
   }));
 
   // Inicializa serviço
-  const [abastecimento, diarias, suprimento] = await Promise.allSettled([
+  const [abastecimento, diarias, obras, suprimento] = await Promise.allSettled([
     AbastecimentoService.create(),
     DiariasService.create(),
+    ObrasService.create(),
     SuprimentoService.create()
   ]);
 
@@ -71,6 +75,11 @@ export async function buildServer() {
   else
     console.error('Erro ao inicializar DiariasService:', diarias.reason);
 
+  if (obras.status === 'fulfilled')
+    console.log('🚀 ObrasService inicializado!');
+  else
+    console.error('Erro ao inicializar ObrasService:', obras.reason);
+
   if (suprimento.status === 'fulfilled')
     console.log('🚀 SuprimentoService inicializado!');
   else
@@ -80,6 +89,8 @@ export async function buildServer() {
     abastecimento.status === 'fulfilled' ? abastecimento.value : null;
   const diariasService =
     diarias.status === 'fulfilled' ? diarias.value : null;
+  const obrasService =
+    obras.status === 'fulfilled' ? obras.value : null;
   const suprimentoService =
     suprimento.status === 'fulfilled' ? suprimento.value : null;
 
@@ -89,7 +100,7 @@ export async function buildServer() {
   // Mercurius
   await app.register(mercurius, {
     schema,
-    context: () => ({ abastecimentoService, diariasService, suprimentoService }),
+    context: () => ({ abastecimentoService, diariasService, obrasService, suprimentoService }),
     graphiql: isDev,
     path: '/graphql',
   });
