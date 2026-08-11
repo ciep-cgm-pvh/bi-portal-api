@@ -1,6 +1,28 @@
-import { ObraEmpenho } from '../../../data/loadObras';
-
-export type Obra = ObraEmpenho;
+/** Registro completo de um empenho de obra, como servido pelo bi-portal-data. */
+export interface Obra {
+  id: number | string | null;
+  empenhoNumber: string | null;
+  empenhoYear: number | null;
+  empenhoDate: string | null;
+  empenhoType: string | null;
+  departmentCode: string | null;
+  budgetUnit: string | null;
+  program: string | null;
+  projectActivity: string | null;
+  expenseElement: string | null;
+  fundingSource: string | null;
+  subElement: string | null;
+  creditor: string | null;
+  creditorCode: string | null;
+  creditorDocument: string | null;
+  processNumber: string | null;
+  subject: string | null;
+  contractNumber: string | null;
+  contractYear: number | null;
+  committedAmount: number;
+  settledAmount: number;
+  paidAmount: number;
+}
 
 export interface ObrasFilters {
   dateRange?: { from?: string; to?: string };
@@ -26,7 +48,7 @@ export interface ObrasTableFilters {
 }
 
 export interface ObraTableRow {
-  id: string;
+  id: number | string | null;
   empenhoNumber: string | null;
   empenhoDate: string | null;
   departmentCode: string | null;
