@@ -1,0 +1,148 @@
+scalar DateTime
+
+# A origem não tem data, só o ano do contrato — o período é filtrado por ano.
+input YearRangeInput {
+  from: Int
+  to: Int
+}
+
+input ContratosFilters {
+  yearRange: YearRangeInput
+  processNumber: String
+  resourceSource: String
+  parliamentarian: String
+  departmentCode: String
+  neighborhood: String
+  area: String
+  status: String
+  description: String
+}
+
+input ContratosFiltersOptions {
+  yearRange: YearRangeInput
+  processNumber: String
+  resourceSource: String
+  parliamentarian: String
+  departmentCode: String
+  neighborhood: String
+  area: String
+  status: String
+  description: String
+}
+
+input ContratosTableFilters {
+  processNumber: String
+  year: String
+  departmentCode: String
+  parliamentarian: String
+  resourceSource: String
+  area: String
+  neighborhood: String
+  description: String
+  status: String
+}
+
+type ContratosKpiData {
+  totalRepasse: Float
+  totalContrapartida: Float
+  totalGlobal: Float
+  totalContratos: Int
+  totalProcessos: Int
+}
+
+type ContratosChartItem {
+  name: String
+  total: Float
+}
+
+type ContratosCharts {
+  ValorPorAno: [ContratosChartItem]
+  ValorPorSecretaria: [ContratosChartItem]
+  ValorPorParlamentar: [ContratosChartItem]
+  ValorPorArea: [ContratosChartItem]
+  ValorPorFonte: [ContratosChartItem]
+  ContratosPorStatus: [ContratosChartItem]
+}
+
+# Linha da tabela (grão = contrato/convênio)
+type ContratoTable {
+  id: String
+  processNumber: String
+  year: Int
+  departmentCode: String
+  parliamentarian: String
+  resourceSource: String
+  area: String
+  neighborhood: String
+  description: String
+  transferAmount: Float
+  counterpartAmount: Float
+  globalAmount: Float
+  status: String
+}
+
+type ContratosTableResponse {
+  data: [ContratoTable]
+  totalCount: Int!
+}
+
+# Registro completo, usado no download da fonte de dados
+type Contrato {
+  id: String
+  processNumber: String
+  year: Int
+  resourceSource: String
+  parliamentarian: String
+  departmentCode: String
+  description: String
+  neighborhood: String
+  area: String
+  transferAmount: Float
+  counterpartAmount: Float
+  globalAmount: Float
+  status: String
+  statusRaw: String
+}
+
+type ContratosSecretariaSummary {
+  departmentCode: String
+  totalRepasse: Float
+  totalContrapartida: Float
+  totalGlobal: Float
+  contratoCount: Int
+}
+
+type FilterOption {
+  value: String
+  label: String
+}
+
+type FilterOptionsContratos {
+  year: [FilterOption]
+  processNumber: [FilterOption]
+  resourceSource: [FilterOption]
+  parliamentarian: [FilterOption]
+  departmentCode: [FilterOption]
+  neighborhood: [FilterOption]
+  area: [FilterOption]
+  status: [FilterOption]
+}
+
+type Query {
+  getContratos(filters: ContratosFilters): [Contrato]
+  getContratosSecretariaSummary(filters: ContratosFilters): [ContratosSecretariaSummary]
+
+  getContratosTable(
+    limit: Int
+    offset: Int
+    sortBy: String
+    sortDirection: String
+    filters: ContratosFilters
+    tableFilters: ContratosTableFilters
+  ): ContratosTableResponse
+
+  getContratosLastUpdate: DateTime
+  getContratosKpi(filters: ContratosFilters): ContratosKpiData
+  getContratosCharts(filters: ContratosFilters): ContratosCharts
+  getContratosFiltersOptions(filters: ContratosFiltersOptions): FilterOptionsContratos
+}

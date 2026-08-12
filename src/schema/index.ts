@@ -9,6 +9,7 @@ import abastecimentoResolver from './abastecimento/abastecimento.resolver';
 import osResolvers from './os/os.resolver';
 import { manutencaoResolvers } from './manutenção/manutencao.resolver';
 import { obrasResolvers } from './obras/obras.resolver';
+import { contratosResolvers } from './contratos/contratos.resolver';
 import { suprimentoResolver } from './suprimentos/suprimento.resolver';
 
 export const buildSchema = async (app: FastifyInstance) => {
@@ -24,6 +25,7 @@ export const buildSchema = async (app: FastifyInstance) => {
     abastecimentoResolver,
     manutencaoResolvers(),
     obrasResolvers(),
+    contratosResolvers(),
     osResolvers(),
     suprimentoResolver(),
   ]);

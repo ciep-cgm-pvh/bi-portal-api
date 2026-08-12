@@ -12,6 +12,7 @@ import { buildSchema } from './schema/index';
 import { SuprimentoService } from './schema/suprimentos/suprimento.service';
 import { DiariasService } from './schema/diarias/diarias.service';
 import { ObrasService } from './schema/obras/obras.service';
+import { ContratosService } from './schema/contratos/contratos.service';
 
 export async function buildServer() {
   const isDev = process.env.NODE_ENV !== 'PRODUCTION';
@@ -58,11 +59,12 @@ export async function buildServer() {
   }));
 
   // Inicializa serviço
-  const [abastecimento, diarias, obras, suprimento] = await Promise.allSettled([
+  const [abastecimento, diarias, obras, suprimento, contratos] = await Promise.allSettled([
     AbastecimentoService.create(),
     DiariasService.create(),
     ObrasService.create(),
-    SuprimentoService.create()
+    SuprimentoService.create(),
+    ContratosService.create()
   ]);
 
   if (abastecimento.status === 'fulfilled')
@@ -85,6 +87,11 @@ export async function buildServer() {
   else
     console.error('Erro ao inicializar SuprimentoService:', suprimento.reason);
 
+  if (contratos.status === 'fulfilled')
+    console.log('🚀 ContratosService inicializado!');
+  else
+    console.error('Erro ao inicializar ContratosService:', contratos.reason);
+
   const abastecimentoService =
     abastecimento.status === 'fulfilled' ? abastecimento.value : null;
   const diariasService =
@@ -93,6 +100,8 @@ export async function buildServer() {
     obras.status === 'fulfilled' ? obras.value : null;
   const suprimentoService =
     suprimento.status === 'fulfilled' ? suprimento.value : null;
+  const contratosService =
+    contratos.status === 'fulfilled' ? contratos.value : null;
 
   // Schema GraphQL
   const schema = await buildSchema(app);
@@ -100,7 +109,7 @@ export async function buildServer() {
   // Mercurius
   await app.register(mercurius, {
     schema,
-    context: () => ({ abastecimentoService, diariasService, obrasService, suprimentoService }),
+    context: () => ({ abastecimentoService, diariasService, obrasService, suprimentoService, contratosService }),
     graphiql: isDev,
     path: '/graphql',
   });
